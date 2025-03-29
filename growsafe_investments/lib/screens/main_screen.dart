@@ -20,6 +20,7 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   late User _user;
   late List<Widget> _pages;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -37,15 +38,18 @@ class _MainScreenState extends State<MainScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     authProvider.checkAuthStatus().then((_) {
-      if (!authProvider.isAuthenticated || authProvider.user == null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
-      } else {
+      if (mounted) { // Check if widget is still active
         setState(() {
-          _user = authProvider.user!;
-          _updatePages();
+          _isLoading = false;
+          if (authProvider.isAuthenticated && authProvider.user != null) {
+            _user = authProvider.user!;
+            _updatePages();
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          }
         });
       }
     });
@@ -95,6 +99,12 @@ class _MainScreenState extends State<MainScreen> {
     final authProvider = Provider.of<AuthProvider>(context);
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: Row(
@@ -107,9 +117,7 @@ class _MainScreenState extends State<MainScreen> {
                 children: [
                   _buildAppBar(authProvider),
                   Expanded(
-                    child: _pages.isEmpty
-                        ? const Center(child: CircularProgressIndicator())
-                        : _pages[_selectedIndex],
+                    child: _pages[_selectedIndex],
                   ),
                 ],
               ),
@@ -120,6 +128,9 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: isDesktop ? null : _buildBottomNavigationBar(),
     );
   }
+
+  // _buildAppBar, _buildBottomNavigationBar, _buildSideNavigationBar remain unchanged from previous version
+  // Including them here for completeness:
 
   Widget _buildAppBar(AuthProvider authProvider) {
     return AppBar(
