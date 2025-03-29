@@ -68,7 +68,7 @@ class ApiService {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Token $token',
+        'Authorization': 'Bearer $token',
       },
     );
     print("Profile Status: ${response.statusCode}");
