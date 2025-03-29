@@ -5,28 +5,53 @@ import 'package:growsafe_investments/providers/auth_provider.dart';
 import 'package:growsafe_investments/screens/main_screen.dart';
 import 'package:provider/provider.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _login() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await authProvider.login(
+      _usernameController.text,
+      _passwordController.text,
+      context,
+    );
+    if (mounted && authProvider.isAuthenticated && authProvider.user != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            authProvider.errorMessage ?? 'Login failed. Please try again.',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final TextEditingController _usernameController = TextEditingController();
-    final TextEditingController _passwordController = TextEditingController();
-
-    void _login() async {
-      await authProvider.login(
-        _usernameController.text,
-        _passwordController.text,
-        context,
-      );
-      if (authProvider.isAuthenticated) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-      }
-    }
 
     return Scaffold(
       body: Container(
@@ -40,7 +65,6 @@ class LoginPage extends StatelessWidget {
         child: Center(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // Determine max width based on screen size
               double maxFormWidth = constraints.maxWidth > 600 ? 400 : constraints.maxWidth * 0.9;
               double padding = constraints.maxWidth > 600 ? 32.0 : 16.0;
 
@@ -50,9 +74,11 @@ class LoginPage extends StatelessWidget {
                   constraints: BoxConstraints(maxWidth: maxFormWidth),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
                         'Login to GrowSafe',
+                        textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
                           fontSize: constraints.maxWidth > 600 ? 32 : 28,
                           fontWeight: FontWeight.bold,
@@ -69,8 +95,10 @@ class LoginPage extends StatelessWidget {
                           filled: true,
                           fillColor: Colors.white.withOpacity(0.1),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
+                          prefixIcon: const Icon(Icons.person, color: Colors.white70),
                         ),
                       ),
                       SizedBox(height: padding),
@@ -84,29 +112,36 @@ class LoginPage extends StatelessWidget {
                           filled: true,
                           fillColor: Colors.white.withOpacity(0.1),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
                           ),
+                          prefixIcon: const Icon(Icons.lock, color: Colors.white70),
                         ),
                       ),
                       SizedBox(height: padding),
                       if (authProvider.errorMessage != null)
-                        Text(
-                          authProvider.errorMessage!,
-                          style: GoogleFonts.poppins(color: Colors.redAccent),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Text(
+                            authProvider.errorMessage!,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.poppins(color: Colors.redAccent, fontSize: 14),
+                          ),
                         ),
                       SizedBox(height: padding),
                       authProvider.isLoading
-                          ? const CircularProgressIndicator()
+                          ? const Center(child: CircularProgressIndicator(color: Colors.white))
                           : ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
+                                backgroundColor: const Color(0xFF26A69A),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 padding: EdgeInsets.symmetric(
                                   horizontal: padding * 2,
                                   vertical: padding * 0.75,
                                 ),
+                                elevation: 2,
                               ),
                               onPressed: _login,
                               child: Text(
@@ -114,6 +149,7 @@ class LoginPage extends StatelessWidget {
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
                                   fontSize: constraints.maxWidth > 600 ? 18 : 16,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
@@ -127,7 +163,7 @@ class LoginPage extends StatelessWidget {
                         },
                         child: Text(
                           'Don\'t have an account? Sign Up',
-                          style: GoogleFonts.poppins(color: Colors.white70),
+                          style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
                         ),
                       ),
                     ],
