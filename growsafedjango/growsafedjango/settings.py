@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 import os
 from pathlib import Path
-from datetime import datetime
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -154,8 +154,8 @@ CORS_ALLOW_CREDENTIALS = True
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=5), # Access token validity 
-    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=10), #Refresh token validity
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=5), # Access token validity 
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=10), #Refresh token validity
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
