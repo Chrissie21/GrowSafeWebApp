@@ -8,8 +8,6 @@ import 'package:growsafe_investments/pages/investment_selection_page.dart';
 import 'package:growsafe_investments/pages/login_page.dart';
 import 'package:growsafe_investments/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:growsafe_investments/models/user.dart';
-
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -20,37 +18,33 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  late User _user;  // Declare the user variable
-
+  late User _user;
   late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    
-    // Initial empty User object or null check
     _user = User(
       id: 'lp499586',
       userId: '2557459866779',
       total: 1.00,
       totalDeposit: 0.00,
       totalWithdraw: 10.00,
+      investments: [],
+      dailyEarnings: 0.0,
     );
-    _user.calculateDailyEarnings();  // Assuming your User class has this method
     _updatePages();
 
-    // Check authentication status on init
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     authProvider.checkAuthStatus().then((_) {
-      if (!authProvider.isAuthenticated) {
+      if (!authProvider.isAuthenticated || authProvider.user == null) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginPage()),
         );
       } else {
-        // Set the user after authentication is complete
         setState(() {
-          _user = authProvider.user!;  // Set user from auth provider if available
+          _user = authProvider.user!;
           _updatePages();
         });
       }
@@ -79,100 +73,153 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   bool _handleWithdraw(double amount) {
-    bool success = false;
-    setState(() {
-      success = _user.withdraw(amount);
-      _updatePages();
-    });
+    bool success = _user.withdraw(amount);
+    if (success) {
+      setState(() {
+        _updatePages();
+      });
+    }
     return success;
   }
 
   void _updatePages() {
     _pages = [
-      DashboardPage(user: _user),  // Pass the initialized user here
-      InvestmentSelectionPage(
-        user: _user,
-        onInvest: _handleInvestment,
-      ),
-      AccountPage(
-        user: _user,
-        onDeposit: _handleDeposit,
-        onWithdraw: _handleWithdraw,
-      ),
+      DashboardPage(user: _user),
+      InvestmentSelectionPage(user: _user, onInvest: _handleInvestment),
+      AccountPage(user: _user, onDeposit: _handleDeposit, onWithdraw: _handleWithdraw),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final isDesktop = MediaQuery.of(context).size.width > 800;
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () async {
-              await authProvider.logout();
-              if (!authProvider.isAuthenticated) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              }
-            },
+      backgroundColor: const Color(0xFFF5F7FA),
+      body: Row(
+        children: [
+          if (isDesktop) _buildSideNavigationBar(),
+          Expanded(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height,
+              child: Column(
+                children: [
+                  _buildAppBar(authProvider),
+                  Expanded(
+                    child: _pages.isEmpty
+                        ? const Center(child: CircularProgressIndicator())
+                        : _pages[_selectedIndex],
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
-      body: _pages.isEmpty ? const Center(child: CircularProgressIndicator()) : _pages[_selectedIndex],  // Show loading indicator while pages are empty
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Colors.teal, Colors.cyan],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, -4),
-            ),
-          ],
+      bottomNavigationBar: isDesktop ? null : _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildAppBar(AuthProvider authProvider) {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      title: Text(
+        'GrowSafe Investments',
+        style: GoogleFonts.poppins(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: const Color(0xFF1A3C34),
         ),
-        child: BottomNavigationBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: ElasticIn(
-                child: const Icon(Icons.dashboard),
-              ),
-              label: 'Dashboard',
-            ),
-            BottomNavigationBarItem(
-              icon: ElasticIn(
-                child: const Icon(Icons.trending_up),
-              ),
-              label: 'Investments',
-            ),
-            BottomNavigationBarItem(
-              icon: ElasticIn(
-                child: const Icon(Icons.person),
-              ),
-              label: 'Account',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          selectedItemColor: Colors.white,
-          unselectedItemColor: Colors.white70,
-          selectedLabelStyle: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-          ),
-          unselectedLabelStyle: GoogleFonts.poppins(),
-          onTap: _onItemTapped,
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout, color: Color(0xFF1A3C34)),
+          tooltip: 'Logout',
+          onPressed: () async {
+            await authProvider.logout();
+            if (!authProvider.isAuthenticated) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            }
+          },
         ),
+      ],
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF26A69A), Color(0xFF80CBC4)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: ElasticIn(child: const Icon(Icons.dashboard)),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: ElasticIn(child: const Icon(Icons.trending_up)),
+            label: 'Investments',
+          ),
+          BottomNavigationBarItem(
+            icon: ElasticIn(child: const Icon(Icons.person)),
+            label: 'Account',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white70,
+        selectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: GoogleFonts.poppins(),
+        onTap: _onItemTapped,
+      ),
+    );
+  }
+
+  Widget _buildSideNavigationBar() {
+    return Container(
+      width: 200,
+      color: const Color(0xFF1A3C34),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          ListTile(
+            leading: const Icon(Icons.dashboard, color: Colors.white),
+            title: Text('Dashboard', style: GoogleFonts.poppins(color: Colors.white)),
+            selected: _selectedIndex == 0,
+            onTap: () => _onItemTapped(0),
+          ),
+          ListTile(
+            leading: const Icon(Icons.trending_up, color: Colors.white),
+            title: Text('Investments', style: GoogleFonts.poppins(color: Colors.white)),
+            selected: _selectedIndex == 1,
+            onTap: () => _onItemTapped(1),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person, color: Colors.white),
+            title: Text('Account', style: GoogleFonts.poppins(color: Colors.white)),
+            selected: _selectedIndex == 2,
+            onTap: () => _onItemTapped(2),
+          ),
+        ],
       ),
     );
   }

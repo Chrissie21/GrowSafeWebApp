@@ -18,95 +18,119 @@ class AccountPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "Account",
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 104, 209, 185),
-      ),
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF1A3C34), Color(0xFF0A1F44)],
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+    return SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 600;
+          return Padding(
+            padding: EdgeInsets.all(isWide ? 32.0 : 16.0),
+            child: SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  FadeInDown(child: _buildProfileSection()),
-                  const SizedBox(height: 20),
-                  FadeInLeft(child: _buildNavigationButtons(context)),
-                  const SizedBox(height: 20),
+                  FadeInDown(
+                    child: Text(
+                      'My Account',
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1A3C34),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  FadeInLeft(child: _buildProfileSection(isWide)),
+                  const SizedBox(height: 24),
+                  FadeInRight(child: _buildNavigationButtons(context, isWide)),
+                  const SizedBox(height: 24),
                   FadeInUp(child: _buildAdditionalContent()),
                 ],
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildProfileSection() {
+  Widget _buildProfileSection(bool isWide) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                radius: 40,
-                backgroundColor: Colors.white,
-                child: Icon(Icons.person, size: 40, color: Color(0xFF1A3C34)),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user.userId,
-                      style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                    Text(
-                      'ID: ${user.id}',
-                      style: GoogleFonts.poppins(fontSize: 14, color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: _buildAccountStats(),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
+      child: isWide
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Color(0xFF26A69A),
+                  child: Icon(Icons.person, size: 40, color: Colors.white),
+                ),
+                const SizedBox(width: 24),
+                Expanded(child: _buildProfileDetails()),
+                const SizedBox(width: 24),
+                Expanded(child: Column(children: _buildAccountStats())),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Color(0xFF26A69A),
+                      child: Icon(Icons.person, size: 40, color: Colors.white),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildProfileDetails()),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: _buildAccountStats(),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildProfileDetails() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          user.userId,
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF1A3C34),
+          ),
+        ),
+        Text(
+          'ID: ${user.id}',
+          style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
+        ),
+      ],
     );
   }
 
   List<Widget> _buildAccountStats() {
     return [
       _buildStatTile("Total", user.total),
-      _buildStatTile("Deposit", user.totalDeposit),
-      _buildStatTile("Withdraw", user.totalWithdraw),
+      _buildStatTile("Deposits", user.totalDeposit),
+      _buildStatTile("Withdrawals", user.totalWithdraw),
     ];
   }
 
@@ -115,39 +139,91 @@ class AccountPage extends StatelessWidget {
       children: [
         Text(
           '\$${amount.toStringAsFixed(2)}',
-          style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF26A69A),
+          ),
         ),
         Text(
           title,
-          style: GoogleFonts.poppins(fontSize: 12, color: Colors.white70),
+          style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
         ),
       ],
     );
   }
 
-  Widget _buildNavigationButtons(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        CircleButton(label: 'Deposit', icon: Icons.account_balance_wallet, size: 70, onPressed: () => _showDepositDialog(context)),
-        CircleButton(label: 'Withdraw', icon: Icons.money_off, size: 70, onPressed: () => _showWithdrawDialog(context)),
-      ],
-    );
+  Widget _buildNavigationButtons(BuildContext context, bool isWide) {
+    return isWide
+        ? Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleButton(
+                label: 'Deposit',
+                icon: Icons.account_balance_wallet,
+                size: 80,
+                onPressed: () => _showDepositDialog(context),
+              ),
+              const SizedBox(width: 32),
+              CircleButton(
+                label: 'Withdraw',
+                icon: Icons.money_off,
+                size: 80,
+                onPressed: () => _showWithdrawDialog(context),
+              ),
+            ],
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              CircleButton(
+                label: 'Deposit',
+                icon: Icons.account_balance_wallet,
+                size: 70,
+                onPressed: () => _showDepositDialog(context),
+              ),
+              CircleButton(
+                label: 'Withdraw',
+                icon: Icons.money_off,
+                size: 70,
+                onPressed: () => _showWithdrawDialog(context),
+              ),
+            ],
+          );
   }
 
   Widget _buildAdditionalContent() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Center(
-        child: Text(
-          'Additional Content',
-          style: GoogleFonts.poppins(fontSize: 16, color: Colors.white70),
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Account Overview',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1A3C34),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Manage your funds and track your investment journey here.',
+            style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
+          ),
+        ],
       ),
     );
   }
@@ -167,29 +243,52 @@ class AccountPage extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.black)),
+        title: Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF1A3C34),
+          ),
+        ),
         content: TextField(
           controller: amountController,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
             labelText: 'Amount',
+            labelStyle: GoogleFonts.poppins(),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             filled: true,
-            fillColor: Colors.grey.shade200,
+            fillColor: Colors.grey[100],
+            prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF26A69A)),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.black54)),
+            child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey[600])),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF66C2A5)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF26A69A),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 2,
+            ),
             onPressed: () {
               final amount = double.tryParse(amountController.text) ?? 0.0;
-              if (amount > 0) {
+              if (amount > 0 && (title.contains('Withdraw') ? amount <= user.total : true)) {
                 action(amount);
                 Navigator.pop(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      amount <= 0 ? 'Enter a valid amount!' : 'Insufficient balance!',
+                      style: GoogleFonts.poppins(),
+                    ),
+                    backgroundColor: Colors.redAccent,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
               }
             },
             child: Text('Confirm', style: GoogleFonts.poppins(color: Colors.white)),

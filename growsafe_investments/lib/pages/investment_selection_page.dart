@@ -13,8 +13,7 @@ class InvestmentSelectionPage extends StatelessWidget {
     required this.onInvest,
   });
 
-  // Sample investment options
-  final List<Map<String, dynamic>> investmentOptions = const [
+  static const List<Map<String, dynamic>> investmentOptions = [
     {'name': 'Plan A', 'dailyReturnRate': 0.03, 'minAmount': 10.0},
     {'name': 'Plan B', 'dailyReturnRate': 0.05, 'minAmount': 50.0},
     {'name': 'Plan C', 'dailyReturnRate': 0.07, 'minAmount': 100.0},
@@ -27,26 +26,49 @@ class InvestmentSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth > 1200 ? 4 : constraints.maxWidth > 600 ? 3 : 2;
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(constraints.maxWidth > 800 ? 32.0 : 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FadeInDown(
+                  child: Text(
+                    'Choose Your Investment Plan',
+                    style: GoogleFonts.poppins(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1A3C34),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 1.2,
+                    ),
+                    itemCount: investmentOptions.length,
+                    itemBuilder: (context, index) {
+                      final option = investmentOptions[index];
+                      return ZoomIn(
+                        delay: Duration(milliseconds: index * 100),
+                        child: _buildInvestmentCard(context, option),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
-          itemCount: investmentOptions.length,
-          itemBuilder: (context, index) {
-            final option = investmentOptions[index];
-            return ZoomIn(
-              delay: Duration(milliseconds: index * 100),
-              child: _buildInvestmentCard(context, option),
-            );
-          },
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -54,15 +76,15 @@ class InvestmentSelectionPage extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Colors.teal, Colors.cyan],
+          colors: [Color(0xFF26A69A), Color(0xFF80CBC4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
@@ -71,10 +93,9 @@ class InvestmentSelectionPage extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            _showInvestmentDialog(context, option);
-          },
-          child: Center(
+          onTap: () => _showInvestmentDialog(context, option),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -86,9 +107,9 @@ class InvestmentSelectionPage extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
-                  'Daily Return: ${(option['dailyReturnRate'] * 100).toStringAsFixed(1)}%',
+                  'Return: ${(option['dailyReturnRate'] * 100).toStringAsFixed(1)}%',
                   style: GoogleFonts.poppins(
                     color: Colors.white70,
                     fontSize: 14,
@@ -115,26 +136,29 @@ class InvestmentSelectionPage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Invest in ${option['name']}',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
-            color: Colors.teal,
+            color: const Color(0xFF1A3C34),
           ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Daily Return: ${(option['dailyReturnRate'] * 100).toStringAsFixed(1)}%',
-              style: GoogleFonts.poppins(color: Colors.black54),
+              style: GoogleFonts.poppins(color: Colors.grey[600]),
             ),
             Text(
-              'Minimum Amount: \$${option['minAmount'].toStringAsFixed(2)}',
-              style: GoogleFonts.poppins(color: Colors.black54),
+              'Min Amount: \$${option['minAmount'].toStringAsFixed(2)}',
+              style: GoogleFonts.poppins(color: Colors.grey[600]),
+            ),
+            Text(
+              'Available Balance: \$${user.total.toStringAsFixed(2)}',
+              style: GoogleFonts.poppins(color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -143,11 +167,10 @@ class InvestmentSelectionPage extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: 'Amount to Invest',
                 labelStyle: GoogleFonts.poppins(),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 filled: true,
-                fillColor: Colors.grey[200],
+                fillColor: Colors.grey[100],
+                prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF26A69A)),
               ),
             ),
           ],
@@ -155,17 +178,13 @@ class InvestmentSelectionPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(color: Colors.grey),
-            ),
+            child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey[600])),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              backgroundColor: const Color(0xFF26A69A),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 2,
             ),
             onPressed: () {
               final amount = double.tryParse(amountController.text) ?? 0.0;
@@ -182,19 +201,17 @@ class InvestmentSelectionPage extends StatelessWidget {
                   SnackBar(
                     content: Text(
                       amount < option['minAmount']
-                          ? 'Amount is less than the minimum required!'
+                          ? 'Amount below minimum requirement!'
                           : 'Insufficient balance!',
                       style: GoogleFonts.poppins(),
                     ),
                     backgroundColor: Colors.redAccent,
+                    behavior: SnackBarBehavior.floating,
                   ),
                 );
               }
             },
-            child: Text(
-              'Invest',
-              style: GoogleFonts.poppins(color: Colors.white),
-            ),
+            child: Text('Invest', style: GoogleFonts.poppins(color: Colors.white)),
           ),
         ],
       ),
