@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:growsafe_investments/services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider with ChangeNotifier {
   String? _token;
@@ -15,6 +16,10 @@ class AuthProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _token != null;
 
+  AuthProvider() {
+    _loadToken();
+  }
+
   Future<void> signup(String username, String email, String password, String confirmPassword) async {
     _setLoading(true);
     _clearError();
@@ -25,6 +30,7 @@ class AuthProvider with ChangeNotifier {
         _token = response['token'];
         _username = username;
         _email = email;
+        await _saveToken(_token!);
         notifyListeners();
       } else {
         _setError(response['error'] ?? 'Signup failed');
@@ -45,7 +51,9 @@ class AuthProvider with ChangeNotifier {
       if (response.containsKey('token')) {
         _token = response['token'];
         _username = username;
-        final profileResponse = await ApiService.getProfile(_token!); // Pass the token
+        await _saveToken(_token!);  // Save token to local storage
+
+        final profileResponse = await ApiService.getProfile(_token!);
         _email = profileResponse['email'];
         notifyListeners();
       } else {
@@ -63,11 +71,12 @@ class AuthProvider with ChangeNotifier {
     _clearError();
 
     try {
-      final response = await ApiService.logout(_token!); // Pass the token
+      final response = await ApiService.logout(_token!);
       if (response['message'] == 'Logout successful') {
         _token = null;
         _username = null;
         _email = null;
+        await _clearToken();
         notifyListeners();
       } else {
         _setError('Logout failed');
@@ -82,7 +91,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> checkAuthStatus() async {
     if (_token != null) {
       try {
-        final profileResponse = await ApiService.getProfile(_token!); // Pass the token
+        final profileResponse = await ApiService.getProfile(_token!);
         if (profileResponse.containsKey('username')) {
           _username = profileResponse['username'];
           _email = profileResponse['email'];
@@ -91,15 +100,38 @@ class AuthProvider with ChangeNotifier {
           _token = null;
           _username = null;
           _email = null;
+          await _clearToken();
           notifyListeners();
         }
       } catch (e) {
         _token = null;
         _username = null;
         _email = null;
+        await _clearToken();
         notifyListeners();
       }
     }
+  }
+
+  // Save token to SharedPreferences
+  Future<void> _saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+  }
+
+  // Load token from SharedPreferences
+  Future<void> _loadToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    _token = prefs.getString('auth_token');
+    if (_token != null) {
+      await checkAuthStatus();
+    }
+  }
+
+  // Clear token from SharedPreferences
+  Future<void> _clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
   }
 
   void _setLoading(bool value) {

@@ -5,12 +5,14 @@ class CircleButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback? onPressed;
+  final double size; // Added size parameter
 
   const CircleButton({
     super.key,
     required this.label,
     required this.icon,
     this.onPressed,
+    this.size = 60.0, // Default size (diameter of the button)
   });
 
   @override
@@ -20,6 +22,8 @@ class CircleButton extends StatelessWidget {
         GestureDetector(
           onTap: onPressed,
           child: Container(
+            width: size, // Set width based on size
+            height: size, // Set height based on size
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Colors.teal, Colors.cyan],
@@ -36,11 +40,11 @@ class CircleButton extends StatelessWidget {
               ],
             ),
             child: CircleAvatar(
-              radius: 30,
+              radius: size / 2, // Radius is half the size
               backgroundColor: Colors.transparent,
               child: Icon(
                 icon,
-                size: 30,
+                size: size * 0.5, // Icon scales with button size
                 color: Colors.white,
               ),
             ),
@@ -51,7 +55,7 @@ class CircleButton extends StatelessWidget {
           label,
           style: GoogleFonts.poppins(
             color: Colors.white,
-            fontSize: 12,
+            fontSize: size * 0.2, // Text scales with button size
           ),
         ),
       ],
