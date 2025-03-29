@@ -21,7 +21,6 @@ class _LoginPageState extends State<LoginPage> {
     await authProvider.login(
       _usernameController.text,
       _passwordController.text,
-      context,
     );
     if (mounted && authProvider.isAuthenticated && authProvider.user != null) {
       Navigator.pushReplacement(
