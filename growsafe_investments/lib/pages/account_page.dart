@@ -19,12 +19,17 @@ class AccountPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          "Account",
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        centerTitle: true,
+        backgroundColor: const Color.fromARGB(255, 104, 209, 185),
+      ),
       body: Stack(
         children: [
-          // Background layer
           Container(
-            width: double.infinity,
-            height: double.infinity, // Ensure it covers the full screen
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -33,39 +38,19 @@ class AccountPage extends StatelessWidget {
               ),
             ),
           ),
-          // Scrollable content layer
           SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                double padding = constraints.maxWidth > 600 ? 32.0 : 16.0;
-                double maxContentWidth = constraints.maxWidth > 800 ? 600 : constraints.maxWidth * 0.85;
-
-                return SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight, // Ensure content takes full height if shorter
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(padding),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: maxContentWidth),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              FadeInDown(child: _buildProfileSection(constraints)),
-                              SizedBox(height: padding * 1.5),
-                              FadeInLeft(child: _buildNavigationButtons(context, constraints)),
-                              SizedBox(height: padding * 1.5),
-                              FadeInUp(child: _buildAdditionalContent(constraints)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  FadeInDown(child: _buildProfileSection()),
+                  const SizedBox(height: 20),
+                  FadeInLeft(child: _buildNavigationButtons(context)),
+                  const SizedBox(height: 20),
+                  FadeInUp(child: _buildAdditionalContent()),
+                ],
+              ),
             ),
           ),
         ],
@@ -73,33 +58,20 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileSection(BoxConstraints constraints) {
+  Widget _buildProfileSection() {
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF66C2A5), Color(0xFF3E6B6B)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               const CircleAvatar(
                 radius: 40,
-                backgroundColor: Color(0xFFD5F0E8),
+                backgroundColor: Colors.white,
                 child: Icon(Icons.person, size: 40, color: Color(0xFF1A3C34)),
               ),
               const SizedBox(width: 16),
@@ -109,18 +81,11 @@ class AccountPage extends StatelessWidget {
                   children: [
                     Text(
                       user.userId,
-                      style: GoogleFonts.poppins(
-                        fontSize: constraints.maxWidth > 600 ? 20 : 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     Text(
                       'ID: ${user.id}',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white70,
-                        fontSize: constraints.maxWidth > 600 ? 16 : 14,
-                      ),
+                      style: GoogleFonts.poppins(fontSize: 14, color: Colors.white70),
                     ),
                   ],
                 ),
@@ -128,326 +93,106 @@ class AccountPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: constraints.maxWidth > 600 ? 32 : 16,
-            runSpacing: 8,
-            children: [
-              Column(
-                children: [
-                  Text(
-                    '\$${user.total.toStringAsFixed(2)}',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: constraints.maxWidth > 600 ? 16 : 14,
-                    ),
-                  ),
-                  Text(
-                    'Total',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  Text(
-                    '\$${user.totalDeposit.toStringAsFixed(2)}',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: constraints.maxWidth > 600 ? 16 : 14,
-                    ),
-                  ),
-                  Text(
-                    'Total Deposit',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  Text(
-                    '\$${user.totalWithdraw.toStringAsFixed(2)}',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: constraints.maxWidth > 600 ? 16 : 14,
-                    ),
-                  ),
-                  Text(
-                    'Total Withdraw',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: _buildAccountStats(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNavigationButtons(BuildContext context, BoxConstraints constraints) {
-    double buttonSize = constraints.maxWidth > 600 ? 80.0 : 60.0;
-    return Wrap(
-      spacing: constraints.maxWidth > 600 ? 32 : 16,
-      runSpacing: 16,
-      alignment: WrapAlignment.center,
+  List<Widget> _buildAccountStats() {
+    return [
+      _buildStatTile("Total", user.total),
+      _buildStatTile("Deposit", user.totalDeposit),
+      _buildStatTile("Withdraw", user.totalWithdraw),
+    ];
+  }
+
+  Widget _buildStatTile(String title, double amount) {
+    return Column(
       children: [
-        ZoomIn(
-          child: CircleButton(
-            label: 'Deposit',
-            icon: Icons.account_balance_wallet,
-            size: buttonSize,
-            onPressed: () => _showDepositDialog(context),
-          ),
+        Text(
+          '\$${amount.toStringAsFixed(2)}',
+          style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
         ),
-        ZoomIn(
-          child: CircleButton(
-            label: 'Withdraw',
-            icon: Icons.money_off,
-            size: buttonSize,
-            onPressed: () => _showWithdrawDialog(context),
-          ),
-        ),
-        ZoomIn(
-          child: CircleButton(
-            label: 'Password',
-            icon: Icons.lock,
-            size: buttonSize,
-            onPressed: () => _showPasswordDialog(context),
-          ),
-        ),
-        ZoomIn(
-          child: CircleButton(
-            label: 'Account',
-            icon: Icons.person,
-            size: buttonSize,
-          ),
+        Text(
+          title,
+          style: GoogleFonts.poppins(fontSize: 12, color: Colors.white70),
         ),
       ],
     );
   }
 
-  Widget _buildAdditionalContent(BoxConstraints constraints) {
+  Widget _buildNavigationButtons(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        CircleButton(label: 'Deposit', icon: Icons.account_balance_wallet, size: 70, onPressed: () => _showDepositDialog(context)),
+        CircleButton(label: 'Withdraw', icon: Icons.money_off, size: 70, onPressed: () => _showWithdrawDialog(context)),
+      ],
+    );
+  }
+
+  Widget _buildAdditionalContent() {
     return Container(
       width: double.infinity,
-      height: constraints.maxWidth > 600 ? 250 : 200,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF66C2A5), Color(0xFF3E6B6B)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Center(
         child: Text(
           'Additional Content',
-          style: GoogleFonts.poppins(
-            color: Colors.white70,
-            fontSize: constraints.maxWidth > 600 ? 18 : 16,
-          ),
+          style: GoogleFonts.poppins(fontSize: 16, color: Colors.white70),
         ),
       ),
     );
   }
 
   void _showDepositDialog(BuildContext context) {
-    final TextEditingController amountController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFD5F0E8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          'Deposit Funds',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF1A3C34),
-          ),
-        ),
-        content: TextField(
-          controller: amountController,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: 'Amount',
-            labelStyle: GoogleFonts.poppins(color: const Color(0xFF3E6B6B)),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(color: const Color(0xFF3E6B6B)),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF66C2A5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () {
-              final amount = double.tryParse(amountController.text) ?? 0.0;
-              if (amount > 0) {
-                onDeposit(amount);
-                Navigator.pop(context);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Please enter a valid amount',
-                      style: GoogleFonts.poppins(),
-                    ),
-                    backgroundColor: Colors.redAccent,
-                  ),
-                );
-              }
-            },
-            child: Text(
-              'Deposit',
-              style: GoogleFonts.poppins(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
+    _showAmountDialog(context, "Deposit Funds", onDeposit);
   }
 
   void _showWithdrawDialog(BuildContext context) {
+    _showAmountDialog(context, "Withdraw Funds", onWithdraw);
+  }
+
+  void _showAmountDialog(BuildContext context, String title, Function(double) action) {
     final TextEditingController amountController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFD5F0E8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          'Withdraw Funds',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF1A3C34),
-          ),
-        ),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.black)),
         content: TextField(
           controller: amountController,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
             labelText: 'Amount',
-            labelStyle: GoogleFonts.poppins(color: const Color(0xFF3E6B6B)),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Colors.grey.shade200,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(color: const Color(0xFF3E6B6B)),
-            ),
+            child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.black54)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF66C2A5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF66C2A5)),
             onPressed: () {
               final amount = double.tryParse(amountController.text) ?? 0.0;
               if (amount > 0) {
-                final success = onWithdraw(amount);
+                action(amount);
                 Navigator.pop(context);
-                if (!success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Insufficient balance',
-                        style: GoogleFonts.poppins(),
-                      ),
-                      backgroundColor: Colors.redAccent,
-                    ),
-                  );
-                }
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Please enter a valid amount',
-                      style: GoogleFonts.poppins(),
-                    ),
-                    backgroundColor: Colors.redAccent,
-                  ),
-                );
               }
             },
-            child: Text(
-              'Withdraw',
-              style: GoogleFonts.poppins(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPasswordDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFD5F0E8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          'Change Password',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF1A3C34),
-          ),
-        ),
-        content: Text(
-          'Password change functionality coming soon!',
-          style: GoogleFonts.poppins(color: const Color(0xFF3E6B6B)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'OK',
-              style: GoogleFonts.poppins(color: const Color(0xFF3E6B6B)),
-            ),
+            child: Text('Confirm', style: GoogleFonts.poppins(color: Colors.white)),
           ),
         ],
       ),

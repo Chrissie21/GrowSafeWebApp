@@ -128,6 +128,12 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // Get token from SharedPreferences
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
+
   // Clear token from SharedPreferences
   Future<void> _clearToken() async {
     final prefs = await SharedPreferences.getInstance();
