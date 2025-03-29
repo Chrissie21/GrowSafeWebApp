@@ -81,3 +81,23 @@ def profile(request):
         'email': user.email,
         'message': 'You are logged in'
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # This allows anyone to use the refresh token endpoint
+def refresh_token(request):
+    refresh_token = request.data.get('refresh')
+    
+    if not refresh_token:
+        return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Validate the refresh token and generate a new access token
+        refresh = RefreshToken(refresh_token)
+        access_token = refresh.access_token
+
+        return Response({
+            'access': str(access_token),
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': 'Invalid refresh token or session expired'}, status=status.HTTP_400_BAD_REQUEST)

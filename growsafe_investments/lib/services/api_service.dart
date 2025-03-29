@@ -25,24 +25,24 @@ class ApiService {
 
   // Login
   static Future<Map<String, dynamic>> login(String username, String password) async {
-  final url = Uri.parse('$baseUrl/login/');
-  print("Login URL: $url");
-  final response = await http.post(
-    url,
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'username': username,
-      'password': password,
-    }),
-  );
-  print("Login Status: ${response.statusCode}");
-  print("Login Response: ${response.body}");
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body); // Should contain 'token'
-  } else {
-    return {'error': 'Login failed', 'status': response.statusCode, 'body': response.body};
+    final url = Uri.parse('$baseUrl/login/');
+    print("Login URL: $url");
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'username': username,
+        'password': password,
+      }),
+    );
+    print("Login Status: ${response.statusCode}");
+    print("Login Response: ${response.body}");
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body); // Should contain 'access' and 'refresh'
+    } else {
+      return {'error': 'Login failed', 'status': response.statusCode, 'body': response.body};
+    }
   }
-}
 
   // Logout
   static Future<Map<String, dynamic>> logout(String token) async {
@@ -74,5 +74,27 @@ class ApiService {
     print("Profile Status: ${response.statusCode}");
     print("Profile Response: ${response.body}");
     return jsonDecode(response.body);
+  }
+
+  // Refresh Access Token
+  static Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
+    final url = Uri.parse('$baseUrl/refresh-token/'); // Your backend URL for refreshing token
+    print("Refresh Token URL: $url");
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'refresh': refreshToken, // Send the refresh token in the body
+      }),
+    );
+    print("Refresh Token Status: ${response.statusCode}");
+    print("Refresh Token Response: ${response.body}");
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body); // Should contain the new access token
+    } else {
+      return {'error': 'Failed to refresh token', 'status': response.statusCode, 'body': response.body};
+    }
   }
 }
