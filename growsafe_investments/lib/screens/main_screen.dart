@@ -8,6 +8,8 @@ import 'package:growsafe_investments/pages/investment_selection_page.dart';
 import 'package:growsafe_investments/pages/login_page.dart';
 import 'package:growsafe_investments/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:growsafe_investments/models/user.dart';
+
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -18,12 +20,15 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  late User _user;
+  late User _user;  // Declare the user variable
+
   late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    
+    // Initial empty User object or null check
     _user = User(
       id: 'lp499586',
       userId: '2557459866779',
@@ -31,7 +36,7 @@ class _MainScreenState extends State<MainScreen> {
       totalDeposit: 0.00,
       totalWithdraw: 10.00,
     );
-    _user.calculateDailyEarnings();
+    _user.calculateDailyEarnings();  // Assuming your User class has this method
     _updatePages();
 
     // Check authentication status on init
@@ -42,6 +47,12 @@ class _MainScreenState extends State<MainScreen> {
           context,
           MaterialPageRoute(builder: (context) => const LoginPage()),
         );
+      } else {
+        // Set the user after authentication is complete
+        setState(() {
+          _user = authProvider.user!;  // Set user from auth provider if available
+          _updatePages();
+        });
       }
     });
   }
@@ -78,7 +89,7 @@ class _MainScreenState extends State<MainScreen> {
 
   void _updatePages() {
     _pages = [
-      DashboardPage(user: _user),
+      DashboardPage(user: _user),  // Pass the initialized user here
       InvestmentSelectionPage(
         user: _user,
         onInvest: _handleInvestment,
@@ -114,7 +125,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
-      body: _pages[_selectedIndex],
+      body: _pages.isEmpty ? const Center(child: CircularProgressIndicator()) : _pages[_selectedIndex],  // Show loading indicator while pages are empty
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           gradient: const LinearGradient(

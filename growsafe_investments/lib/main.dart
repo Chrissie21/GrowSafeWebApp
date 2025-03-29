@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:growsafe_investments/pages/login_page.dart';
 import 'package:growsafe_investments/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:growsafe_investments/pages/dashboard_page.dart';
 
 void main() {
   runApp(
@@ -31,18 +32,16 @@ class GrowSafeInvestmentsApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1A3C34),
-              Color(0xFF0A1F44),
-            ],
-          ),
-        ),
-        child: const LoginPage(),
+      home: Consumer<AuthProvider>(
+        builder: (context, authProvider, child) {
+          if (authProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (authProvider.isAuthenticated && authProvider.user != null) {
+            return DashboardPage(user: authProvider.user!);
+          } else {
+            return const LoginPage();
+          }
+        },
       ),
     );
   }

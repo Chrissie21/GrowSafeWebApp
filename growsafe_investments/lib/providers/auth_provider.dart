@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:growsafe_investments/pages/dashboard_page.dart';
 import 'package:growsafe_investments/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:growsafe_investments/models/user.dart';
 
 class AuthProvider with ChangeNotifier {
   String? _accessToken;
   String? _refreshToken;
-  String? _username;
-  String? _email;
+  User? _user; // Replace individual fields with a User object
   bool _isLoading = false;
   String? _errorMessage;
 
   String? get accessToken => _accessToken;
   String? get refreshToken => _refreshToken;
-  String? get username => _username;
-  String? get email => _email;
+  User? get user => _user;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _accessToken != null;
@@ -31,8 +31,15 @@ class AuthProvider with ChangeNotifier {
       if (response.containsKey('access') && response.containsKey('refresh')) {
         _accessToken = response['access'];
         _refreshToken = response['refresh'];
-        _username = username;
-        _email = email;
+        _user = User(
+          id: response['id'] ?? username, // Adjust based on your API response
+          userId: email,
+          total: 0.0,
+          totalDeposit: 0.0,
+          totalWithdraw: 0.0,
+          investments: [],
+          dailyEarnings: 0.0,
+        );
         await _saveTokens(_accessToken!, _refreshToken!);
         notifyListeners();
       } else {
@@ -45,7 +52,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> login(String username, String password) async {
+  Future<void> login(String username, String password, BuildContext context) async {
     _setLoading(true);
     _clearError();
 
@@ -54,11 +61,33 @@ class AuthProvider with ChangeNotifier {
       if (response.containsKey('access') && response.containsKey('refresh')) {
         _accessToken = response['access'];
         _refreshToken = response['refresh'];
-        _username = username;
-        await _saveTokens(_accessToken!, _refreshToken!);  // Save tokens to local storage
+        await _saveTokens(_accessToken!, _refreshToken!);
 
         final profileResponse = await ApiService.getProfile(_accessToken!);
-        _email = profileResponse['email'];
+        _user = User(
+          id: profileResponse['id'] ?? username, // Adjust based on your API
+          userId: profileResponse['email'] ?? username,
+          total: profileResponse['total']?.toDouble() ?? 0.0,
+          totalDeposit: profileResponse['total_deposit']?.toDouble() ?? 0.0,
+          totalWithdraw: profileResponse['total_withdraw']?.toDouble() ?? 0.0,
+          investments: (profileResponse['investments'] as List? ?? [])
+              .map((inv) => Investment(
+                    name: inv['name'] ?? 'Unknown',
+                    amount: inv['amount']?.toDouble() ?? 0.0,
+                    dailyReturnRate: inv['daily_return_rate']?.toDouble() ?? 0.0,
+                  ))
+              .toList(),
+          dailyEarnings: profileResponse['daily_earnings']?.toDouble() ?? 0.0,
+        );
+        _user!.calculateDailyEarnings(); // Calculate earnings after loading investments
+
+        // Navigate to DashboardPage with the User object
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DashboardPage(user: _user!),
+          ),
+        );
         notifyListeners();
       } else {
         _setError(response['error'] ?? 'Login failed');
@@ -77,12 +106,7 @@ class AuthProvider with ChangeNotifier {
     try {
       final response = await ApiService.logout(_accessToken!);
       if (response['message'] == 'Logout successful') {
-        _accessToken = null;
-        _refreshToken = null;
-        _username = null;
-        _email = null;
-        await _clearTokens();
-        notifyListeners();
+        _clearAuthData();
       } else {
         _setError('Logout failed');
       }
@@ -94,40 +118,51 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> checkAuthStatus() async {
+    _accessToken = await getAccessToken();
     if (_accessToken != null) {
       try {
         final profileResponse = await ApiService.getProfile(_accessToken!);
-        if (profileResponse.containsKey('username')) {
-          _username = profileResponse['username'];
-          _email = profileResponse['email'];
+        if (profileResponse.containsKey('email')) {
+          _user = User(
+            id: profileResponse['id'] ?? profileResponse['username'],
+            userId: profileResponse['email'],
+            total: profileResponse['total']?.toDouble() ?? 0.0,
+            totalDeposit: profileResponse['total_deposit']?.toDouble() ?? 0.0,
+            totalWithdraw: profileResponse['total_withdraw']?.toDouble() ?? 0.0,
+            investments: (profileResponse['investments'] as List? ?? [])
+                .map((inv) => Investment(
+                      name: inv['name'] ?? 'Unknown',
+                      amount: inv['amount']?.toDouble() ?? 0.0,
+                      dailyReturnRate: inv['daily_return_rate']?.toDouble() ?? 0.0,
+                    ))
+                .toList(),
+            dailyEarnings: profileResponse['daily_earnings']?.toDouble() ?? 0.0,
+          );
+          _user!.calculateDailyEarnings();
           notifyListeners();
         } else {
-          _accessToken = null;
-          _refreshToken = null;
-          _username = null;
-          _email = null;
-          await _clearTokens();
-          notifyListeners();
+          _clearAuthData();
         }
       } catch (e) {
-        _accessToken = null;
-        _refreshToken = null;
-        _username = null;
-        _email = null;
-        await _clearTokens();
-        notifyListeners();
+        _clearAuthData();
       }
     }
   }
 
-  // Save access and refresh tokens to SharedPreferences
+  void _clearAuthData() {
+    _accessToken = null;
+    _refreshToken = null;
+    _user = null;
+    _clearTokens();
+    notifyListeners();
+  }
+
   Future<void> _saveTokens(String accessToken, String refreshToken) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('access_token', accessToken);
     await prefs.setString('refresh_token', refreshToken);
   }
 
-  // Load tokens from SharedPreferences
   Future<void> _loadTokens() async {
     final prefs = await SharedPreferences.getInstance();
     _accessToken = prefs.getString('access_token');
@@ -137,20 +172,17 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Get the access token from SharedPreferences
   Future<String?> getAccessToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('access_token');
   }
 
-  // Clear access and refresh tokens from SharedPreferences
   Future<void> _clearTokens() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');
     await prefs.remove('refresh_token');
   }
 
-  // Token refresh logic (use refresh token to get a new access token)
   Future<void> refreshAccessToken() async {
     _setLoading(true);
     _clearError();
@@ -160,11 +192,10 @@ class AuthProvider with ChangeNotifier {
         _setError('No refresh token available');
         return;
       }
-
       final response = await ApiService.refreshToken(_refreshToken!);
       if (response.containsKey('access')) {
         _accessToken = response['access'];
-        await _saveTokens(_accessToken!, _refreshToken!);  // Save the new access token
+        await _saveTokens(_accessToken!, _refreshToken!);
         notifyListeners();
       } else {
         _setError('Failed to refresh token');
@@ -176,7 +207,6 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Helper methods for loading, setting loading state, and errors
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
