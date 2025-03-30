@@ -21,29 +21,29 @@ class AccountPage extends StatelessWidget {
     return SafeArea(
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 600;
-          return Padding(
-            padding: EdgeInsets.all(isWide ? 32.0 : 16.0),
-            child: SingleChildScrollView(
+          double padding = constraints.maxWidth > 600 ? 32.0 : 16.0;
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(padding),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   FadeInDown(
                     child: Text(
                       'My Account',
                       style: GoogleFonts.poppins(
-                        fontSize: 24,
+                        fontSize: constraints.maxWidth > 600 ? 24 : 20,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF1A3C34),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  FadeInLeft(child: _buildProfileSection(isWide)),
-                  const SizedBox(height: 24),
-                  FadeInRight(child: _buildNavigationButtons(context, isWide)),
-                  const SizedBox(height: 24),
-                  FadeInUp(child: _buildAdditionalContent()),
+                  SizedBox(height: padding),
+                  FadeInLeft(child: _buildProfileSection(constraints)),
+                  SizedBox(height: padding),
+                  FadeInRight(child: _buildNavigationButtons(context, constraints)),
+                  SizedBox(height: padding),
+                  FadeInUp(child: _buildAdditionalContent(constraints)),
                 ],
               ),
             ),
@@ -53,146 +53,118 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileSection(bool isWide) {
+  Widget _buildProfileSection(BoxConstraints constraints) {
+    double avatarSize = constraints.maxWidth > 600 ? 40 : 32;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: avatarSize,
+                backgroundColor: const Color(0xFF26A69A),
+                child: Icon(Icons.person, size: avatarSize, color: Colors.white),
+              ),
+              const SizedBox(width: 16),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.userId,
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1A3C34),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'ID: ${user.id}',
+                      style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 16.0,
+            runSpacing: 16.0,
+            alignment: WrapAlignment.center,
+            children: _buildAccountStats(constraints),
           ),
         ],
       ),
-      child: isWide
-          ? Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Color(0xFF26A69A),
-                  child: Icon(Icons.person, size: 40, color: Colors.white),
-                ),
-                const SizedBox(width: 24),
-                Expanded(child: _buildProfileDetails()),
-                const SizedBox(width: 24),
-                Expanded(child: Column(children: _buildAccountStats())),
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Color(0xFF26A69A),
-                      child: Icon(Icons.person, size: 40, color: Colors.white),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildProfileDetails()),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: _buildAccountStats(),
-                ),
-              ],
-            ),
     );
   }
 
-  Widget _buildProfileDetails() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          user.userId,
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF1A3C34),
-          ),
-        ),
-        Text(
-          'ID: ${user.id}',
-          style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
-        ),
-      ],
-    );
-  }
-
-  List<Widget> _buildAccountStats() {
+  List<Widget> _buildAccountStats(BoxConstraints constraints) {
+    double tileWidth = (constraints.maxWidth - 64) / 3; // 64 for padding and spacing
     return [
-      _buildStatTile("Total", user.total),
-      _buildStatTile("Deposits", user.totalDeposit),
-      _buildStatTile("Withdrawals", user.totalWithdraw),
+      _buildStatTile("Total", user.total, tileWidth),
+      _buildStatTile("Deposits", user.totalDeposit, tileWidth),
+      _buildStatTile("Withdrawals", user.totalWithdraw, tileWidth),
     ];
   }
 
-  Widget _buildStatTile(String title, double amount) {
-    return Column(
-      children: [
-        Text(
-          '\$${amount.toStringAsFixed(2)}',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF26A69A),
+  Widget _buildStatTile(String title, double amount, double tileWidth) {
+    return Container(
+      width: tileWidth.clamp(100, 150),
+      child: Column(
+        children: [
+          Text(
+            '\$${amount.toStringAsFixed(2)}',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF26A69A),
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
+          Text(
+            title,
+            style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavigationButtons(BuildContext context, BoxConstraints constraints) {
+    double buttonSize = constraints.maxWidth > 600 ? 80 : 70;
+    return Wrap(
+      spacing: 32.0,
+      runSpacing: 16.0,
+      alignment: WrapAlignment.center,
+      children: [
+        CircleButton(
+          label: 'Deposit',
+          icon: Icons.account_balance_wallet,
+          size: buttonSize,
+          onPressed: () => _showDepositDialog(context),
         ),
-        Text(
-          title,
-          style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+        CircleButton(
+          label: 'Withdraw',
+          icon: Icons.money_off,
+          size: buttonSize,
+          onPressed: () => _showWithdrawDialog(context),
         ),
       ],
     );
   }
 
-  Widget _buildNavigationButtons(BuildContext context, bool isWide) {
-    return isWide
-        ? Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircleButton(
-                label: 'Deposit',
-                icon: Icons.account_balance_wallet,
-                size: 80,
-                onPressed: () => _showDepositDialog(context),
-              ),
-              const SizedBox(width: 32),
-              CircleButton(
-                label: 'Withdraw',
-                icon: Icons.money_off,
-                size: 80,
-                onPressed: () => _showWithdrawDialog(context),
-              ),
-            ],
-          )
-        : Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              CircleButton(
-                label: 'Deposit',
-                icon: Icons.account_balance_wallet,
-                size: 70,
-                onPressed: () => _showDepositDialog(context),
-              ),
-              CircleButton(
-                label: 'Withdraw',
-                icon: Icons.money_off,
-                size: 70,
-                onPressed: () => _showWithdrawDialog(context),
-              ),
-            ],
-          );
-  }
-
-  Widget _buildAdditionalContent() {
+  Widget _buildAdditionalContent(BoxConstraints constraints) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -200,11 +172,7 @@ class AccountPage extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -213,7 +181,7 @@ class AccountPage extends StatelessWidget {
           Text(
             'Account Overview',
             style: GoogleFonts.poppins(
-              fontSize: 18,
+              fontSize: constraints.maxWidth > 600 ? 18 : 16,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF1A3C34),
             ),
@@ -245,10 +213,7 @@ class AccountPage extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           title,
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF1A3C34),
-          ),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF1A3C34)),
         ),
         content: TextField(
           controller: amountController,

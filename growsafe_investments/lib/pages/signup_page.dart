@@ -15,7 +15,7 @@ class SignupPage extends StatelessWidget {
     final TextEditingController _passwordController = TextEditingController();
     final TextEditingController _confirmPasswordController = TextEditingController();
 
-    void _signup() async {
+    Future <void> _signup() async {
       await authProvider.signup(
         _usernameController.text,
         _emailController.text,

@@ -11,16 +11,26 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA), // Light gray background
+      backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            double padding = constraints.maxWidth > 800 ? 32.0 : 16.0;
             return SingleChildScrollView(
               child: Padding(
-                padding: EdgeInsets.all(constraints.maxWidth > 800 ? 32.0 : 16.0),
-                child: constraints.maxWidth > 800
-                    ? _buildDesktopLayout(context)
-                    : _buildMobileLayout(context),
+                padding: EdgeInsets.all(padding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    FadeInDown(child: _buildHeader(constraints)),
+                    SizedBox(height: padding),
+                    FadeInLeft(child: _buildBalanceCards(constraints)),
+                    SizedBox(height: padding),
+                    FadeInRight(child: _buildInvestmentsSummary(constraints)),
+                    SizedBox(height: padding),
+                    FadeInUp(child: _buildDynamicInfoSection(constraints)),
+                  ],
+                ),
               ),
             );
           },
@@ -29,91 +39,44 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // Mobile Layout (Single Column)
-  Widget _buildMobileLayout(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        FadeInDown(child: _buildHeader(context)),
-        const SizedBox(height: 24),
-        FadeInLeft(child: _buildBalanceCards(context)),
-        const SizedBox(height: 24),
-        FadeInRight(child: _buildInvestmentsSummary(context)),
-        const SizedBox(height: 24),
-        FadeInUp(child: _buildDynamicInfoSection(context)),
-      ],
-    );
-  }
-
-  // Desktop Layout (Grid-like)
-  Widget _buildDesktopLayout(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 2,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FadeInDown(child: _buildHeader(context)),
-              const SizedBox(height: 24),
-              FadeInLeft(child: _buildBalanceCards(context)),
-            ],
-          ),
-        ),
-        const SizedBox(width: 32),
-        Expanded(
-          flex: 3,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FadeInRight(child: _buildInvestmentsSummary(context)),
-              const SizedBox(height: 24),
-              FadeInUp(child: _buildDynamicInfoSection(context)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BoxConstraints constraints) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          'GrowSafe Investments',
-          style: GoogleFonts.poppins(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF1A3C34), // Dark teal
+        Flexible(
+          child: Text(
+            'GrowSafe Investments',
+            style: GoogleFonts.poppins(
+              fontSize: constraints.maxWidth > 800 ? 28 : 24,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF1A3C34),
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             ElevatedButton.icon(
-              onPressed: () {
-                // Navigate to chat or support
-              },
+              onPressed: () {},
               icon: const Icon(Icons.chat_bubble_outline, size: 20),
               label: const Text('Support'),
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
-                backgroundColor: const Color(0xFF26A69A), // Teal
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                backgroundColor: const Color(0xFF26A69A),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 2,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
             ),
             const SizedBox(width: 16),
             CircleAvatar(
-              radius: 20,
+              radius: constraints.maxWidth > 800 ? 20 : 16,
               backgroundColor: const Color(0xFF26A69A),
               child: Text(
                 user.userId[0].toUpperCase(),
                 style: GoogleFonts.poppins(
-                  fontSize: 18,
+                  fontSize: constraints.maxWidth > 800 ? 18 : 14,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -125,46 +88,32 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBalanceCards(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 600;
-        return isWide
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(child: _buildBalanceCard('Total Balance', '\$${user.total.toStringAsFixed(2)}')),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildBalanceCard('Daily Earnings', '\$${user.dailyEarnings.toStringAsFixed(2)}')),
-                ],
-              )
-            : Column(
-                children: [
-                  _buildBalanceCard('Total Balance', '\$${user.total.toStringAsFixed(2)}'),
-                  const SizedBox(height: 16),
-                  _buildBalanceCard('Daily Earnings', '\$${user.dailyEarnings.toStringAsFixed(2)}'),
-                ],
-              );
-      },
+  Widget _buildBalanceCards(BoxConstraints constraints) {
+    double cardWidth = (constraints.maxWidth - 48) / 2; // 48 for padding
+    return Wrap(
+      spacing: 16.0,
+      runSpacing: 16.0,
+      alignment: WrapAlignment.center,
+      children: [
+        _buildBalanceCard('Total Balance', '\$${user.total.toStringAsFixed(2)}', cardWidth),
+        _buildBalanceCard('Daily Earnings', '\$${user.dailyEarnings.toStringAsFixed(2)}', cardWidth),
+      ],
     );
   }
 
-  Widget _buildBalanceCard(String title, String value) {
+  Widget _buildBalanceCard(String title, String value, double maxWidth) {
     return Container(
+      width: maxWidth.clamp(150, 300),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF26A69A), Color(0xFF80CBC4)], // Teal to light teal
+          colors: [Color(0xFF26A69A), Color(0xFF80CBC4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -172,37 +121,29 @@ class DashboardPage extends StatelessWidget {
         children: [
           Text(
             title,
-            style: GoogleFonts.poppins(
-              color: Colors.white70,
-              fontSize: 16,
-            ),
+            style: GoogleFonts.poppins(color: Colors.white70, fontSize: 16),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
             value,
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+            style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInvestmentsSummary(BuildContext context) {
+  Widget _buildInvestmentsSummary(BoxConstraints constraints) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -211,7 +152,7 @@ class DashboardPage extends StatelessWidget {
           Text(
             'Investments',
             style: GoogleFonts.poppins(
-              fontSize: 20,
+              fontSize: constraints.maxWidth > 800 ? 20 : 18,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF1A3C34),
             ),
@@ -221,10 +162,7 @@ class DashboardPage extends StatelessWidget {
               ? Center(
                   child: Text(
                     'No Investments Yet',
-                    style: GoogleFonts.poppins(
-                      color: Colors.grey[600],
-                      fontSize: 16,
-                    ),
+                    style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 16),
                   ),
                 )
               : SizedBox(
@@ -237,23 +175,15 @@ class DashboardPage extends StatelessWidget {
                         contentPadding: EdgeInsets.zero,
                         title: Text(
                           investment.name,
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFF1A3C34),
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: GoogleFonts.poppins(color: const Color(0xFF1A3C34), fontWeight: FontWeight.w600),
                         ),
                         subtitle: Text(
                           'Amount: \$${investment.amount.toStringAsFixed(2)}',
-                          style: GoogleFonts.poppins(
-                            color: Colors.grey[600],
-                          ),
+                          style: GoogleFonts.poppins(color: Colors.grey[600]),
                         ),
                         trailing: Text(
                           '${(investment.dailyReturnRate * 100).toStringAsFixed(1)}%',
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFF26A69A),
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: GoogleFonts.poppins(color: const Color(0xFF26A69A), fontWeight: FontWeight.w600),
                         ),
                       );
                     },
@@ -264,18 +194,15 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDynamicInfoSection(BuildContext context) {
+  Widget _buildDynamicInfoSection(BoxConstraints constraints) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -284,7 +211,7 @@ class DashboardPage extends StatelessWidget {
           Text(
             'Market Insights',
             style: GoogleFonts.poppins(
-              fontSize: 20,
+              fontSize: constraints.maxWidth > 800 ? 20 : 18,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF1A3C34),
             ),
@@ -292,23 +219,16 @@ class DashboardPage extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Stay tuned for real-time market updates and personalized recommendations.',
-            style: GoogleFonts.poppins(
-              color: Colors.grey[600],
-              fontSize: 16,
-            ),
+            style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 16),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () {
-              // Navigate to detailed insights
-            },
+            onPressed: () {},
             child: const Text('Learn More'),
             style: ElevatedButton.styleFrom(
               foregroundColor: Colors.white,
               backgroundColor: const Color(0xFF26A69A),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 2,
             ),
           ),
