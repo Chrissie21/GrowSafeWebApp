@@ -37,10 +37,12 @@ class _MainScreenState extends State<MainScreen> {
     _updatePages();
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    print("MainScreen initState: Starting checkAuthStatus");
     authProvider.checkAuthStatus().then((_) {
       if (mounted) { // Check if widget is still active
         setState(() {
           _isLoading = false;
+          print("MainScreen checkAuthStatus: isAuthenticated=${authProvider.isAuthenticated}, user=${authProvider.user}");
           if (authProvider.isAuthenticated && authProvider.user != null) {
             _user = authProvider.user!;
             _updatePages();

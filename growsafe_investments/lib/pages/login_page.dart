@@ -22,6 +22,7 @@ class _LoginPageState extends State<LoginPage> {
       _usernameController.text,
       _passwordController.text,
     );
+    print("Login: isAuthenticated=${authProvider.isAuthenticated}, user=${authProvider.user}");
     if (mounted && authProvider.isAuthenticated && authProvider.user != null) {
       Navigator.pushReplacement(
         context,
