@@ -43,10 +43,7 @@ class _MainScreenState extends State<MainScreen> {
         setState(() {
           _isLoading = false;
           print("MainScreen checkAuthStatus: isAuthenticated=${authProvider.isAuthenticated}, user=${authProvider.user}");
-          if (authProvider.isAuthenticated && authProvider.user != null) {
-            _user = authProvider.user!;
-            _updatePages();
-          } else {
+          if (authProvider.isAuthenticated || authProvider.user == null) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -65,8 +62,9 @@ class _MainScreenState extends State<MainScreen> {
 
   void _handleInvestment(Investment investment) {
     setState(() {
-      _user.investments.add(investment);
-      _user.calculateDailyEarnings();
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      authProvider.user!.investments.add(investment);
+      authProvider.user!.calculateDailyEarnings();
       _updatePages();
     });
   }
