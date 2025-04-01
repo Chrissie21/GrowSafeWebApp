@@ -74,7 +74,7 @@ class DashboardPage extends StatelessWidget {
               radius: constraints.maxWidth > 800 ? 20 : 16,
               backgroundColor: const Color(0xFF26A69A),
               child: Text(
-                user.userId[0].toUpperCase(),
+                user.userId.isNotEmpty ? user.userId[0].toUpperCase() : 'U',  // Fallback to 'U'
                 style: GoogleFonts.poppins(
                   fontSize: constraints.maxWidth > 800 ? 18 : 14,
                   color: Colors.white,
