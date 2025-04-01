@@ -60,42 +60,103 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     if (_isLoading || authProvider.user == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     _updatePages(authProvider.user!);
-    // Check if the screen is desktop or mobile
-    // You can adjust the width threshold as per your design requirements
-    final isDesktop = MediaQuery.of(context).size.width > 800;
 
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth > 800;
+        print("Screen Width: ${constraints.maxWidth}, isDesktop: $isDesktop");  // Debug print
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      body: Row(
-        children: [
-          if (isDesktop) _buildSideNavigationBar(),
-          Expanded(
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height,
-              child: Column(
-                children: [
-                  _buildAppBar(authProvider),
-                  Expanded(
-                    child: _pages[_selectedIndex],
-                  ),
-                ],
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              'GrowSafe Investments',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1A3C34),
               ),
             ),
+            backgroundColor: Colors.white,
+            elevation: 2,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.logout, color: Color(0xFF1A3C34)),
+                onPressed: () async {
+                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                  await authProvider.logout();
+                  if (mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                    );
+                  }
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      bottomNavigationBar: isDesktop ? null : _buildBottomNavigationBar(),
+          body: Row(
+            children: [
+              if (isDesktop)
+                NavigationRail(
+                  selectedIndex: _selectedIndex,
+                  onDestinationSelected: _onItemTapped,
+                  labelType: NavigationRailLabelType.all,
+                  backgroundColor: const Color(0xFFF5F7FA),
+                  selectedIconTheme: const IconThemeData(color: Color(0xFF26A69A)),
+                  unselectedIconTheme: const IconThemeData(color: Color(0xFF1A3C34)),
+                  selectedLabelTextStyle: GoogleFonts.poppins(
+                    color: const Color(0xFF26A69A),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  unselectedLabelTextStyle: GoogleFonts.poppins(
+                    color: const Color(0xFF1A3C34),
+                  ),
+                  destinations: const [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.dashboard),
+                      label: Text('Dashboard'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.trending_up),
+                      label: Text('Investments'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.account_circle),
+                      label: Text('Account'),
+                    ),
+                  ],
+                ),
+              Expanded(child: _pages[_selectedIndex]),
+            ],
+          ),
+          bottomNavigationBar: isDesktop
+              ? null
+              : BottomNavigationBar(
+                  currentIndex: _selectedIndex,
+                  onTap: _onItemTapped,
+                  selectedItemColor: const Color(0xFF26A69A),
+                  unselectedItemColor: const Color(0xFF1A3C34),
+                  selectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  unselectedLabelStyle: GoogleFonts.poppins(),
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.dashboard),
+                      label: 'Dashboard',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.trending_up),
+                      label: 'Investments',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.account_circle),
+                      label: 'Account',
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
 
