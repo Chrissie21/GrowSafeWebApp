@@ -4,10 +4,8 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8000/api/auth';
 
-  // Signup
   static Future<Map<String, dynamic>> signup(String username, String email, String password, String confirmPassword) async {
     final url = Uri.parse('$baseUrl/signup/');
-    print("Signup URL: $url"); // Added for debugging
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -18,15 +16,11 @@ class ApiService {
         'confirm_password': confirmPassword,
       }),
     );
-    print("Signup Status: ${response.statusCode}");
-    print("Signup Response: ${response.body}");
     return jsonDecode(response.body);
   }
 
-  // Login
   static Future<Map<String, dynamic>> login(String username, String password) async {
     final url = Uri.parse('$baseUrl/login/');
-    print("Login URL: $url");
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -35,35 +29,23 @@ class ApiService {
         'password': password,
       }),
     );
-    print("Login Status: ${response.statusCode}");
-    print("Login Response: ${response.body}");
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body); // Should contain 'access' and 'refresh'
-    } else {
-      return {'error': 'Login failed', 'status': response.statusCode, 'body': response.body};
-    }
+    return jsonDecode(response.body);
   }
 
-  // Logout
   static Future<Map<String, dynamic>> logout(String token) async {
     final url = Uri.parse('$baseUrl/logout/');
-    print("Logout URL: $url");
     final response = await http.post(
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Token $token',
+        'Authorization': 'Bearer $token',  // Fixed to Bearer
       },
     );
-    print("Logout Status: ${response.statusCode}");
-    print("Logout Response: ${response.body}");
     return jsonDecode(response.body);
   }
 
-  // Get Profile
   static Future<Map<String, dynamic>> getProfile(String token) async {
     final url = Uri.parse('$baseUrl/profile/');
-    print("Profile URL: $url");
     final response = await http.get(
       url,
       headers: {
@@ -71,30 +53,59 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
     );
-    print("Profile Status: ${response.statusCode}");
-    print("Profile Response: ${response.body}");
     return jsonDecode(response.body);
   }
 
-  // Refresh Access Token
   static Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
-    final url = Uri.parse('$baseUrl/refresh-token/'); // Your backend URL for refreshing token
-    print("Refresh Token URL: $url");
+    final url = Uri.parse('$baseUrl/token/refresh/');  // Fixed URL
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'refresh': refreshToken}),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> deposit(String token, double amount) async {
+    final url = Uri.parse('$baseUrl/deposit/');
     final response = await http.post(
       url,
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'amount': amount}),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> withdraw(String token, double amount) async {
+    final url = Uri.parse('$baseUrl/withdraw/');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'amount': amount}),
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> invest(String token, String name, double amount, double dailyReturnRate) async {
+    final url = Uri.parse('$baseUrl/invest/');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
       },
       body: jsonEncode({
-        'refresh': refreshToken, // Send the refresh token in the body
+        'name': name,
+        'amount': amount,
+        'daily_return_rate': dailyReturnRate,
       }),
     );
-    print("Refresh Token Status: ${response.statusCode}");
-    print("Refresh Token Response: ${response.body}");
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body); // Should contain the new access token
-    } else {
-      return {'error': 'Failed to refresh token', 'status': response.statusCode, 'body': response.body};
-    }
+    return jsonDecode(response.body);
   }
 }

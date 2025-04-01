@@ -10,17 +10,17 @@ class SignupPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final TextEditingController _usernameController = TextEditingController();
-    final TextEditingController _emailController = TextEditingController();
-    final TextEditingController _passwordController = TextEditingController();
-    final TextEditingController _confirmPasswordController = TextEditingController();
+    final TextEditingController usernameController = TextEditingController();
+    final TextEditingController emailController = TextEditingController();
+    final TextEditingController passwordController = TextEditingController();
+    final TextEditingController confirmPasswordController = TextEditingController();
 
-    Future <void> _signup() async {
+    Future <void> signup() async {
       await authProvider.signup(
-        _usernameController.text,
-        _emailController.text,
-        _passwordController.text,
-        _confirmPasswordController.text,
+        usernameController.text,
+        emailController.text,
+        passwordController.text,
+        confirmPasswordController.text,
       );
       if (authProvider.isAuthenticated) {
         Navigator.pushReplacement(
@@ -80,7 +80,7 @@ class SignupPage extends StatelessWidget {
                         child: Column(
                           children: [
                             TextField(
-                              controller: _usernameController,
+                              controller: usernameController,
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 labelText: 'Username',
@@ -94,7 +94,7 @@ class SignupPage extends StatelessWidget {
                             ),
                             SizedBox(height: padding),
                             TextField(
-                              controller: _emailController,
+                              controller: emailController,
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 labelText: 'Email',
@@ -108,7 +108,7 @@ class SignupPage extends StatelessWidget {
                             ),
                             SizedBox(height: padding),
                             TextField(
-                              controller: _passwordController,
+                              controller: passwordController,
                               style: const TextStyle(color: Colors.white),
                               obscureText: true,
                               decoration: InputDecoration(
@@ -123,7 +123,7 @@ class SignupPage extends StatelessWidget {
                             ),
                             SizedBox(height: padding),
                             TextField(
-                              controller: _confirmPasswordController,
+                              controller: confirmPasswordController,
                               style: const TextStyle(color: Colors.white),
                               obscureText: true,
                               decoration: InputDecoration(
@@ -156,7 +156,7 @@ class SignupPage extends StatelessWidget {
                                         vertical: padding * 0.75,
                                       ),
                                     ),
-                                    onPressed: _signup,
+                                    onPressed: signup,
                                     child: Text(
                                       'Sign Up',
                                       style: GoogleFonts.poppins(

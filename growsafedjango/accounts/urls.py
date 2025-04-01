@@ -1,7 +1,5 @@
-# accounts/urls.py
 from django.urls import path
 from . import views
-from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path('', views.auth_root, name='auth_root'),
@@ -9,5 +7,8 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
     path('profile/', views.profile, name='profile'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Token refresh view
+    path('deposit/', views.deposit, name='deposit'),
+    path('withdraw/', views.withdraw, name='withdraw'),
+    path('invest/', views.invest, name='invest'),
+    path('token/refresh/', views.refresh_token, name='token_refresh'),
 ]

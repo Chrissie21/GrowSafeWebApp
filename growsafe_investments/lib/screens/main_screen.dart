@@ -18,26 +18,14 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  late User _user;
   late List<Widget> _pages;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _user = User(
-      id: 'lp499586',
-      userId: '2557459866779',
-      total: 1.00,
-      totalDeposit: 0.00,
-      totalWithdraw: 10.00,
-      investments: [],
-      dailyEarnings: 0.0,
-    );
-    _updatePages();
-
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    print("MainScreen initState: Starting checkAuthStatus");
+    _updatePages(authProvider.user!);
     authProvider.checkAuthStatus().then((_) {
       if (mounted) { // Check if widget is still active
         setState(() {
@@ -60,43 +48,25 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  void _handleInvestment(Investment investment) {
-    setState(() {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.user!.investments.add(investment);
-      authProvider.user!.calculateDailyEarnings();
-      _updatePages();
-    });
-  }
-
-  void _handleDeposit(double amount) {
-    setState(() {
-      _user.deposit(amount);
-      _updatePages();
-    });
-  }
-
-  bool _handleWithdraw(double amount) {
-    bool success = _user.withdraw(amount);
-    if (success) {
-      setState(() {
-        _updatePages();
-      });
-    }
-    return success;
-  }
-
-  void _updatePages() {
+  void _updatePages(User user) {
     _pages = [
-      DashboardPage(user: _user),
-      InvestmentSelectionPage(user: _user, onInvest: _handleInvestment),
-      AccountPage(user: _user, onDeposit: _handleDeposit, onWithdraw: _handleWithdraw),
+      DashboardPage(user: user),
+      InvestmentSelectionPage(user: user, onInvest: (investment) {}),
+      AccountPage(user: user, onDeposit: (amount){}, onWithdraw: (amount) {}),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    if (_isLoading || authProvider.user == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    _updatePages(authProvider.user!);
+    // Check if the screen is desktop or mobile
+    // You can adjust the width threshold as per your design requirements
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
     if (_isLoading) {

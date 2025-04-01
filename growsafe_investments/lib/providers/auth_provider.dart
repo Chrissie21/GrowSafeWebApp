@@ -24,23 +24,13 @@ class AuthProvider with ChangeNotifier {
   Future<void> signup(String username, String email, String password, String confirmPassword) async {
     _setLoading(true);
     _clearError();
-
     try {
       final response = await ApiService.signup(username, email, password, confirmPassword);
       if (response.containsKey('access') && response.containsKey('refresh')) {
         _accessToken = response['access'];
         _refreshToken = response['refresh'];
-        _user = User(
-          id: response['id']?.toString() ?? username,
-          userId: email,
-          total: 0.0,
-          totalDeposit: 0.0,
-          totalWithdraw: 0.0,
-          investments: [],
-          dailyEarnings: 0.0,
-        );
         await _saveTokens(_accessToken!, _refreshToken!);
-        await _fetchUserProfile(); // Fetch full profile after signup
+        await _fetchUserProfile();
         notifyListeners();
       } else {
         _setError(response['error'] ?? 'Signup failed');
@@ -55,14 +45,13 @@ class AuthProvider with ChangeNotifier {
   Future<void> login(String username, String password) async {
     _setLoading(true);
     _clearError();
-
     try {
       final response = await ApiService.login(username, password);
       if (response.containsKey('access') && response.containsKey('refresh')) {
         _accessToken = response['access'];
         _refreshToken = response['refresh'];
         await _saveTokens(_accessToken!, _refreshToken!);
-        await _fetchUserProfile(); // Fetch profile without navigation
+        await _fetchUserProfile();
         notifyListeners();
       } else {
         _setError(response['error'] ?? 'Login failed');
@@ -77,7 +66,6 @@ class AuthProvider with ChangeNotifier {
   Future<void> logout() async {
     _setLoading(true);
     _clearError();
-
     try {
       final response = await ApiService.logout(_accessToken!);
       if (response['message'] == 'Logout successful') {
@@ -95,7 +83,6 @@ class AuthProvider with ChangeNotifier {
   Future<void> checkAuthStatus() async {
     _setLoading(true);
     _clearError();
-
     _accessToken = await getAccessToken();
     if (_accessToken != null) {
       try {
@@ -112,23 +99,101 @@ class AuthProvider with ChangeNotifier {
     try {
       final profileResponse = await ApiService.getProfile(_accessToken!);
       _user = User(
-        id: profileResponse['id']?.toString() ?? profileResponse['username'] ?? '',
+        id: profileResponse['username'] ?? '',
         userId: profileResponse['email'] ?? '',
-        total: profileResponse['total']?.toDouble() ?? 0.0,
-        totalDeposit: profileResponse['total_deposit']?.toDouble() ?? 0.0,
-        totalWithdraw: profileResponse['total_withdraw']?.toDouble() ?? 0.0,
+        total: double.parse(profileResponse['total'] ?? '0.0'),
+        totalDeposit: double.parse(profileResponse['total_deposit'] ?? '0.0'),
+        totalWithdraw: double.parse(profileResponse['total_withdraw'] ?? '0.0'),
         investments: (profileResponse['investments'] as List? ?? [])
             .map((inv) => Investment(
                   name: inv['name'] ?? 'Unknown',
-                  amount: inv['amount']?.toDouble() ?? 0.0,
-                  dailyReturnRate: inv['daily_return_rate']?.toDouble() ?? 0.0,
+                  amount: double.parse(inv['amount'] ?? '0.0'),
+                  dailyReturnRate: double.parse(inv['daily_return_rate'] ?? '0.0'),
                 ))
             .toList(),
-        dailyEarnings: profileResponse['daily_earnings']?.toDouble() ?? 0.0,
+        dailyEarnings: double.parse(profileResponse['daily_earnings'] ?? '0.0'),
       );
-      _user!.calculateDailyEarnings();
     } catch (e) {
       throw Exception('Failed to fetch profile: $e');
+    }
+  }
+
+  Future<void> deposit(double amount) async {
+    _setLoading(true);
+    _clearError();
+    try {
+      final response = await ApiService.deposit(_accessToken!, amount);
+      if (response['message'] == 'Deposit successful') {
+        await _fetchUserProfile();  // Sync with backend
+        notifyListeners();
+      } else {
+        _setError(response['error'] ?? 'Deposit failed');
+      }
+    } catch (e) {
+      _setError('Deposit failed: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> withdraw(double amount) async {
+    _setLoading(true);
+    _clearError();
+    try {
+      final response = await ApiService.withdraw(_accessToken!, amount);
+      if (response['message'] == 'Withdrawal successful') {
+        await _fetchUserProfile();  // Sync with backend
+        notifyListeners();
+      } else {
+        _setError(response['error'] ?? 'Withdrawal failed');
+      }
+    } catch (e) {
+      _setError('Withdrawal failed: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> invest(String name, double amount, double dailyReturnRate) async {
+    _setLoading(true);
+    _clearError();
+    try {
+      final response = await ApiService.invest(_accessToken!, name, amount, dailyReturnRate);
+      if (response['message'] == 'Investment successful') {
+        await _fetchUserProfile();  // Sync with backend
+        notifyListeners();
+      } else {
+        _setError(response['error'] ?? 'Investment failed');
+      }
+    } catch (e) {
+      _setError('Investment failed: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> refreshAccessToken() async {
+    _setLoading(true);
+    _clearError();
+    try {
+      if (_refreshToken == null) {
+        _setError('No refresh token available');
+        return;
+      }
+      final response = await ApiService.refreshToken(_refreshToken!);
+      if (response.containsKey('access')) {
+        _accessToken = response['access'];
+        await _saveTokens(_accessToken!, _refreshToken!);
+        await _fetchUserProfile();
+        notifyListeners();
+      } else {
+        _setError('Failed to refresh token');
+      }
+    } catch (e) {
+      _setError('Token refresh failed: $e');
+      _clearAuthData();
+    } finally {
+      _setLoading(false);
     }
   }
 
@@ -164,32 +229,6 @@ class AuthProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');
     await prefs.remove('refresh_token');
-  }
-
-  Future<void> refreshAccessToken() async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      if (_refreshToken == null) {
-        _setError('No refresh token available');
-        return;
-      }
-      final response = await ApiService.refreshToken(_refreshToken!);
-      if (response.containsKey('access')) {
-        _accessToken = response['access'];
-        await _saveTokens(_accessToken!, _refreshToken!);
-        await _fetchUserProfile(); // Refresh user data too
-        notifyListeners();
-      } else {
-        _setError('Failed to refresh token');
-      }
-    } catch (e) {
-      _setError('Token refresh failed: $e');
-      _clearAuthData();
-    } finally {
-      _setLoading(false);
-    }
   }
 
   void _setLoading(bool value) {

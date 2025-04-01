@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:growsafe_investments/models/user.dart';
+import 'package:growsafe_investments/providers/auth_provider.dart';
 import 'package:growsafe_investments/widgets/circle_button.dart';
+import 'package:provider/provider.dart';
 
 class AccountPage extends StatelessWidget {
   final User user;
@@ -119,7 +121,7 @@ class AccountPage extends StatelessWidget {
   }
 
   Widget _buildStatTile(String title, double amount, double tileWidth) {
-    return Container(
+    return SizedBox(
       width: tileWidth.clamp(100, 150),
       child: Column(
         children: [
@@ -206,6 +208,7 @@ class AccountPage extends StatelessWidget {
 
   void _showAmountDialog(BuildContext context, String title, Function(double) action) {
     final TextEditingController amountController = TextEditingController();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -238,11 +241,24 @@ class AccountPage extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               elevation: 2,
             ),
-            onPressed: () {
+            onPressed: () async {
               final amount = double.tryParse(amountController.text) ?? 0.0;
               if (amount > 0 && (title.contains('Withdraw') ? amount <= user.total : true)) {
-                action(amount);
-                Navigator.pop(context);
+                if (title.contains('Deposit')) {
+                  await authProvider.deposit(amount);
+                } else {
+                  await authProvider.withdraw(amount);
+                }
+                if (authProvider.errorMessage == null) {
+                  Navigator.pop(context);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(authProvider.errorMessage!, style: GoogleFonts.poppins()),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -251,7 +267,6 @@ class AccountPage extends StatelessWidget {
                       style: GoogleFonts.poppins(),
                     ),
                     backgroundColor: Colors.redAccent,
-                    behavior: SnackBarBehavior.floating,
                   ),
                 );
               }

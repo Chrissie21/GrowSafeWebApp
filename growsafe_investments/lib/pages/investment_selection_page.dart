@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:growsafe_investments/models/user.dart';
+import 'package:growsafe_investments/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class InvestmentSelectionPage extends StatelessWidget {
   final User user;
@@ -131,90 +133,80 @@ class InvestmentSelectionPage extends StatelessWidget {
   }
 
   void _showInvestmentDialog(BuildContext context, Map<String, dynamic> option) {
-    final TextEditingController amountController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Invest in ${option['name']}',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF1A3C34),
+  final TextEditingController amountController = TextEditingController();
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        'Invest in ${option['name']}',
+        style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color(0xFF1A3C34)),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Daily Return: ${(option['dailyReturnRate'] * 100).toStringAsFixed(1)}%', style: GoogleFonts.poppins(color: Colors.grey[600])),
+          Text('Min Amount: \$${option['minAmount'].toStringAsFixed(2)}', style: GoogleFonts.poppins(color: Colors.grey[600])),
+          Text('Available Balance: \$${user.total.toStringAsFixed(2)}', style: GoogleFonts.poppins(color: Colors.grey[600])),
+          const SizedBox(height: 16),
+          TextField(
+            controller: amountController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Amount to Invest',
+              labelStyle: GoogleFonts.poppins(),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: Colors.grey[100],
+              prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF26A69A)),
+            ),
           ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey[600])),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Daily Return: ${(option['dailyReturnRate'] * 100).toStringAsFixed(1)}%',
-              style: GoogleFonts.poppins(color: Colors.grey[600]),
-            ),
-            Text(
-              'Min Amount: \$${option['minAmount'].toStringAsFixed(2)}',
-              style: GoogleFonts.poppins(color: Colors.grey[600]),
-            ),
-            Text(
-              'Available Balance: \$${user.total.toStringAsFixed(2)}',
-              style: GoogleFonts.poppins(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: amountController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Amount to Invest',
-                labelStyle: GoogleFonts.poppins(),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                filled: true,
-                fillColor: Colors.grey[100],
-                prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF26A69A)),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey[600])),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF26A69A),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 2,
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF26A69A),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              elevation: 2,
-            ),
-            onPressed: () {
-              final amount = double.tryParse(amountController.text) ?? 0.0;
-              if (amount >= option['minAmount'] && amount <= user.total) {
-                user.total -= amount;
-                onInvest(Investment(
-                  name: option['name'],
-                  amount: amount,
-                  dailyReturnRate: option['dailyReturnRate'],
-                ));
+          onPressed: () async {
+            final amount = double.tryParse(amountController.text) ?? 0.0;
+            if (amount >= option['minAmount'] && amount <= user.total) {
+              await authProvider.invest(option['name'], amount, option['dailyReturnRate']);
+              if (authProvider.errorMessage == null) {
                 Navigator.pop(context);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(
-                      amount < option['minAmount']
-                          ? 'Amount below minimum requirement!'
-                          : 'Insufficient balance!',
-                      style: GoogleFonts.poppins(),
-                    ),
+                    content: Text(authProvider.errorMessage!, style: GoogleFonts.poppins()),
                     backgroundColor: Colors.redAccent,
-                    behavior: SnackBarBehavior.floating,
                   ),
                 );
               }
-            },
-            child: Text('Invest', style: GoogleFonts.poppins(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    amount < option['minAmount'] ? 'Amount below minimum requirement!' : 'Insufficient balance!',
+                    style: GoogleFonts.poppins(),
+                  ),
+                  backgroundColor: Colors.redAccent,
+                ),
+              );
+            }
+          },
+          child: Text('Invest', style: GoogleFonts.poppins(color: Colors.white)),
+        ),
+      ],
+    ),
+  );
+}
 }
