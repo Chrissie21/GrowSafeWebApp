@@ -43,26 +43,32 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> login(String username, String password) async {
-    _setLoading(true);
-    _clearError();
-    try {
-      final response = await ApiService.login(username, password);
-      if (response.containsKey('access') && response.containsKey('refresh')) {
-        _accessToken = response['access'];
-        print("Access Token: $_accessToken"); // Debugging line
-        _refreshToken = response['refresh'];
-        await _saveTokens(_accessToken!, _refreshToken!);
-        await _fetchUserProfile();
+  _setLoading(true);
+  _clearError();
+  try {
+    final response = await ApiService.login(username, password);
+    if (response.containsKey('access') && response.containsKey('refresh')) {
+      _accessToken = response['access'];
+      _refreshToken = response['refresh'];
+      await _saveTokens(_accessToken!, _refreshToken!);
+      try {
+        await _fetchUserProfile();  // Fetch profile
+      } catch (e) {
+        _user = null;  // Reset user on failure
+        _setError('Failed to fetch user profile: $e');
         notifyListeners();
-      } else {
-        _setError(response['error'] ?? 'Login failed');
+        return;  // Stop here to prevent navigation
       }
-    } catch (e) {
-      _setError('Login failed: $e');
-    } finally {
-      _setLoading(false);
+      notifyListeners();
+    } else {
+      _setError(response['error'] ?? 'Login failed');
     }
+  } catch (e) {
+    _setError('Login failed: $e');
+  } finally {
+    _setLoading(false);
   }
+}
 
   Future<void> logout() async {
     _setLoading(true);
