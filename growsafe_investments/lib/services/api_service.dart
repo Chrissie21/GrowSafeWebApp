@@ -46,6 +46,7 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getProfile(String token) async {
     final url = Uri.parse('$baseUrl/profile/');
+    print("Profile URL: $url");  // Debugging line
     final response = await http.get(
       url,
       headers: {
@@ -53,7 +54,14 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
     );
-    return jsonDecode(response.body);
+    print("Profile Status: ${response.statusCode}");
+    print("Profile Response: ${response.body}");
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      return {'error': 'Failed to load profile', 'status': response.statusCode, 'body':response.body};
+    }
   }
 
   static Future<Map<String, dynamic>> refreshToken(String refreshToken) async {

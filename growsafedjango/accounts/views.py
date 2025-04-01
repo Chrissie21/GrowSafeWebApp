@@ -35,7 +35,7 @@ def signup(request):
         return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
     user = User.objects.create_user(username=username, email=email, password=password)
-    UserProfile.objects.create(user=user)  # Create profile
+    UserProfile.objects.get_or_create(user=user)  # Ensure Profile Exists
     refresh = RefreshToken.for_user(user)
     access_token = refresh.access_token
     return Response({
@@ -72,23 +72,28 @@ def logout(request):
 @api_view(['GET'])
 @permission_classes([AllowAny]) # Temporarily Allowing any for testing
 def profile(request):
-    user = request.user
-    profile = user.profile
-    profile.calculate_daily_earnings()  # Update earnings
-    investments = [
-        {'name': inv.name, 'amount': str(inv.amount), 'daily_return_rate': str(inv.daily_return_rate)}
-        for inv in user.investments.all()
-    ]
-    return Response({
-        'username': user.username,
-        'email': user.email,
-        'total': str(profile.total),
-        'total_deposit': str(profile.total_deposit),
-        'total_withdraw': str(profile.total_withdraw),
-        'daily_earnings': str(profile.daily_earnings),
-        'investments': investments,
-        'message': 'You are logged in'
-    }, status=status.HTTP_200_OK)
+    try:
+     user = request.user
+     profile = user.profile
+     profile.calculate_daily_earnings()  # Update earnings
+     investments = [
+         {'name': inv.name, 'amount': str(inv.amount), 'daily_return_rate': str(inv.daily_return_rate)}
+         for inv in user.investments.all()
+     ]
+     return Response({
+         'username': user.username,
+         'email': user.email,
+         'total': str(profile.total),
+         'total_deposit': str(profile.total_deposit),
+         'total_withdraw': str(profile.total_withdraw),
+         'daily_earnings': str(profile.daily_earnings),
+         'investments': investments,
+         'message': 'You are logged in'
+     }, status=status.HTTP_200_OK)
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'User Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': f'Internal server error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # Deposit
 @api_view(['POST'])

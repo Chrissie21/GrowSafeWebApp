@@ -49,6 +49,7 @@ class AuthProvider with ChangeNotifier {
       final response = await ApiService.login(username, password);
       if (response.containsKey('access') && response.containsKey('refresh')) {
         _accessToken = response['access'];
+        print("Access Token: $_accessToken"); // Debugging line
         _refreshToken = response['refresh'];
         await _saveTokens(_accessToken!, _refreshToken!);
         await _fetchUserProfile();
@@ -98,6 +99,9 @@ class AuthProvider with ChangeNotifier {
   Future<void> _fetchUserProfile() async {
     try {
       final profileResponse = await ApiService.getProfile(_accessToken!);
+      if (profileResponse.containsKey('error')){
+        throw Exception('Failed to fetch profile: ${profileResponse['error']} (Status: ${profileResponse['status']}, Body: ${profileResponse['body']})');
+      }
       _user = User(
         id: profileResponse['username'] ?? '',
         userId: profileResponse['email'] ?? '',
