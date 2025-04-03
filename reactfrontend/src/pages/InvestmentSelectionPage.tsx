@@ -1,6 +1,8 @@
+// pages/InvestmentSelectionPage.tsx
 import React, { useState } from 'react';
-import { Typography, Box, Card, CardContent, CardActionArea, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Typography, Box, Grid, Card, CardContent, CardActionArea, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { useAuth } from '../components/AuthProvider';
+import { useSnackbar } from '../components/SnackbarProvider';
 
 const investmentOptions = [
   { name: 'Plan A', dailyReturnRate: 0.03, minAmount: 10.0 },
@@ -15,6 +17,7 @@ const investmentOptions = [
 
 const InvestmentSelectionPage: React.FC = () => {
   const { user, invest } = useAuth();
+  const { showSnackbar } = useSnackbar();
   const [selectedOption, setSelectedOption] = useState<{ name: string; dailyReturnRate: number; minAmount: number } | null>(null);
   const [amount, setAmount] = useState('');
   const [open, setOpen] = useState(false);
@@ -25,36 +28,41 @@ const InvestmentSelectionPage: React.FC = () => {
     const amountNum = parseFloat(amount);
     if (selectedOption && amountNum >= selectedOption.minAmount && amountNum <= user.total) {
       await invest(selectedOption.name, amountNum, selectedOption.dailyReturnRate);
+      showSnackbar(`Successfully invested $${amountNum} in ${selectedOption.name}`, 'success');
       setOpen(false);
       setAmount('');
     } else {
-      alert(amountNum < (selectedOption?.minAmount || 0) ? 'Amount below minimum!' : 'Insufficient balance!');
+      showSnackbar(
+          amountNum < (selectedOption?.minAmount || 0) ? 'Amount below minimum!' : 'Insufficient balance!',
+          'error'
+      );
     }
   };
 
-  // @ts-ignore
-  // @ts-ignore
   return (
-      <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
-        <Typography variant="h4" color="secondary" gutterBottom>Choose Your Investment Plan</Typography>
-        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' } }}>
-          {investmentOptions.map((option) => (
-              <Card key={option.name} sx={{ bgcolor: '#26A69A', color: 'white' }}>
-                <CardActionArea onClick={() => { setSelectedOption(option); setOpen(true); }}>
-                  <CardContent>
-                    <Typography variant="h6">{option.name}</Typography>
-                    <Typography>Return: {(option.dailyReturnRate * 100).toFixed(1)}%</Typography>
-                    <Typography>Min: ${option.minAmount.toFixed(2)}</Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
+      <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: 'transparent', minHeight: '100vh' }}>
+        <Typography variant="h4" color="secondary" gutterBottom sx={{ fontWeight: 700, animation: 'fadeIn 0.5s ease-in' }}>
+          Choose Your Investment Plan
+        </Typography>
+        <Grid container spacing={2}>
+          {investmentOptions.map((option, index) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={option.name}>
+                <Card sx={{ bgcolor: 'primary.main', color: 'white', animation: `slideIn 0.3s ease-in ${index * 0.1}s both` }}>
+                  <CardActionArea onClick={() => { setSelectedOption(option); setOpen(true); }}>
+                    <CardContent>
+                      <Typography variant="h6">{option.name}</Typography>
+                      <Typography>Return: {(option.dailyReturnRate * 100).toFixed(1)}%</Typography>
+                      <Typography>Min: ${option.minAmount.toFixed(2)}</Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
           ))}
-        </Box>
-
-        <Dialog open={open} onClose={() => setOpen(false)}>
+        </Grid>
+        <Dialog open={open} onClose={() => setOpen(false)} PaperProps={{ sx: { borderRadius: '12px', p: 2 } }}>
           {selectedOption ? (
               <>
-                <DialogTitle>Invest in {selectedOption.name}</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 600 }}>Invest in {selectedOption.name}</DialogTitle>
                 <DialogContent>
                   <Typography>Daily Return: {(selectedOption.dailyReturnRate * 100).toFixed(1)}%</Typography>
                   <Typography>Min Amount: ${selectedOption.minAmount.toFixed(2)}</Typography>
@@ -66,11 +74,15 @@ const InvestmentSelectionPage: React.FC = () => {
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
                       fullWidth
                       margin="normal"
+                      variant="outlined"
+                      InputProps={{ inputProps: { min: selectedOption.minAmount } }}
                   />
                 </DialogContent>
                 <DialogActions>
-                  <Button onClick={() => setOpen(false)}>Cancel</Button>
-                  <Button onClick={handleInvest} variant="contained">Invest</Button>
+                  <Button onClick={() => setOpen(false)} color="inherit">Cancel</Button>
+                  <Button onClick={handleInvest} variant="contained" sx={{ bgcolor: 'secondary.main', color: 'secondary.contrastText' }}>
+                    Invest
+                  </Button>
                 </DialogActions>
               </>
           ) : null}

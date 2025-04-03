@@ -1,9 +1,12 @@
+// pages/AccountPage.tsx
 import React, { useState } from 'react';
-import { Typography, Box, Card, CardContent, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Typography, Box, Card, CardContent, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Grid } from '@mui/material';
 import { useAuth } from '../components/AuthProvider';
+import { useSnackbar } from '../components/SnackbarProvider';
 
 const AccountPage: React.FC = () => {
   const { user, deposit, withdraw } = useAuth();
+  const { showSnackbar } = useSnackbar();
   const [openDeposit, setOpenDeposit] = useState(false);
   const [openWithdraw, setOpenWithdraw] = useState(false);
   const [amount, setAmount] = useState('');
@@ -14,10 +17,11 @@ const AccountPage: React.FC = () => {
     const amountNum = parseFloat(amount);
     if (amountNum > 0) {
       await deposit(amountNum);
+      showSnackbar(`Deposited $${amountNum} successfully`, 'success');
       setOpenDeposit(false);
       setAmount('');
     } else {
-      alert('Enter a valid amount!');
+      showSnackbar('Enter a valid amount!', 'error');
     }
   };
 
@@ -25,77 +29,98 @@ const AccountPage: React.FC = () => {
     const amountNum = parseFloat(amount);
     if (amountNum > 0 && amountNum <= user.total) {
       await withdraw(amountNum);
+      showSnackbar(`Withdrew $${amountNum} successfully`, 'success');
       setOpenWithdraw(false);
       setAmount('');
     } else {
-      alert(amountNum <= 0 ? 'Enter a valid amount!' : 'Insufficient balance!');
+      showSnackbar(amountNum <= 0 ? 'Enter a valid amount!' : 'Insufficient balance!', 'error');
     }
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
-      <Typography variant="h4" color="secondary" gutterBottom>My Account</Typography>
-      <Card sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="h6">{user.userId}</Typography>
-          <Typography color="textSecondary">ID: {user.id}</Typography>
+      <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: 'transparent', minHeight: '100vh' }}>
+        <Typography variant="h4" color="secondary" gutterBottom sx={{ fontWeight: 700, animation: 'fadeIn 0.5s ease-in' }}>
+          My Account
+        </Typography>
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <Typography variant="h6" fontWeight={600}>{user.userId}</Typography>
+              <Typography color="textSecondary">ID: {user.id}</Typography>
+            </Box>
+            <Grid container spacing={2} sx={{ mt: 2 }}>
+              <Grid item xs={12} sm={4}>
+                <CardContent>
+                  <Typography variant="h6" color="primary">${user.total.toFixed(2)}</Typography>
+                  <Typography color="textSecondary">Total</Typography>
+                </CardContent>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <CardContent>
+                  <Typography variant="h6" color="primary">${user.totalDeposit.toFixed(2)}</Typography>
+                  <Typography color="textSecondary">Deposits</Typography>
+                </CardContent>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <CardContent>
+                  <Typography variant="h6" color="primary">${user.totalWithdraw.toFixed(2)}</Typography>
+                  <Typography color="textSecondary">Withdrawals</Typography>
+                </CardContent>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+        <Box sx={{ display: 'flex', gap: 2, mt: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Button variant="contained" onClick={() => setOpenDeposit(true)} sx={{ px: 4, py: 1.5 }}>
+            Deposit
+          </Button>
+          <Button variant="contained" onClick={() => setOpenWithdraw(true)} sx={{ px: 4, py: 1.5 }}>
+            Withdraw
+          </Button>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <CardContent>
-            <Typography variant="h6" color="primary">${user.total.toFixed(2)}</Typography>
-            <Typography>Total</Typography>
-          </CardContent>
-          <CardContent>
-            <Typography variant="h6" color="primary">${user.totalDeposit.toFixed(2)}</Typography>
-            <Typography>Deposits</Typography>
-          </CardContent>
-          <CardContent>
-            <Typography variant="h6" color="primary">${user.totalWithdraw.toFixed(2)}</Typography>
-            <Typography>Withdrawals</Typography>
-          </CardContent>
-        </Box>
-      </Card>
-      <Box sx={{ display: 'flex', gap: 2, mt: 4, justifyContent: 'center' }}>
-        <Button variant="contained" onClick={() => setOpenDeposit(true)}>Deposit</Button>
-        <Button variant="contained" onClick={() => setOpenWithdraw(true)}>Withdraw</Button>
+        <Dialog open={openDeposit} onClose={() => setOpenDeposit(false)} PaperProps={{ sx: { borderRadius: '12px', p: 2 } }}>
+          <DialogTitle sx={{ fontWeight: 600 }}>Deposit Funds</DialogTitle>
+          <DialogContent>
+            <TextField
+                label="Amount"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                fullWidth
+                margin="normal"
+                variant="outlined"
+                InputProps={{ inputProps: { min: 0 } }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDeposit(false)} color="inherit">Cancel</Button>
+            <Button onClick={handleDeposit} variant="contained" sx={{ bgcolor: 'secondary.main', color: 'secondary.contrastText' }}>
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog open={openWithdraw} onClose={() => setOpenWithdraw(false)} PaperProps={{ sx: { borderRadius: '12px', p: 2 } }}>
+          <DialogTitle sx={{ fontWeight: 600 }}>Withdraw Funds</DialogTitle>
+          <DialogContent>
+            <TextField
+                label="Amount"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                fullWidth
+                margin="normal"
+                variant="outlined"
+                InputProps={{ inputProps: { min: 0, max: user.total } }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenWithdraw(false)} color="inherit">Cancel</Button>
+            <Button onClick={handleWithdraw} variant="contained" sx={{ bgcolor: 'secondary.main', color: 'secondary.contrastText' }}>
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
-
-      <Dialog open={openDeposit} onClose={() => setOpenDeposit(false)}>
-        <DialogTitle>Deposit Funds</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Amount"
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDeposit(false)}>Cancel</Button>
-          <Button onClick={handleDeposit} variant="contained">Confirm</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={openWithdraw} onClose={() => setOpenWithdraw(false)}>
-        <DialogTitle>Withdraw Funds</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Amount"
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenWithdraw(false)}>Cancel</Button>
-          <Button onClick={handleWithdraw} variant="contained">Confirm</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
   );
 };
 
