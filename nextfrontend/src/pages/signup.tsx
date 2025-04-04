@@ -1,8 +1,7 @@
-"use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 
 const SignUp = () => {
     const router = useRouter();
@@ -120,11 +119,11 @@ const SignUp = () => {
 
             <header className="container mx-auto px-4 py-6">
                 <nav className="flex justify-between items-center">
-                    <Link href="/" className="text-green-700 font-bold text-xl">
+                    <Link href="/nextfrontend/public" className="text-green-700 font-bold text-xl">
                         GrowSafe
                     </Link>
                     <div>
-                        <Link href="/login">
+                        <Link href="/nextfrontend/src/pages/login/login">
                             <button className="px-4 py-2 text-green-700 border border-green-600 rounded hover:bg-green-600 hover:text-white transition-colors">
                                 Log In
                             </button>
@@ -282,7 +281,7 @@ const SignUp = () => {
                     <div className="mt-8 text-center">
                         <p className="text-gray-600">
                             Already have an account?{" "}
-                            <Link href="/login" className="text-green-600 hover:underline font-medium">
+                            <Link href="/nextfrontend/src/pages/login/login" className="text-green-600 hover:underline font-medium">
                                 Log in
                             </Link>
                         </p>
