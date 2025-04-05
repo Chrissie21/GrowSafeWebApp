@@ -22,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
       _usernameController.text,
       _passwordController.text,
     );
-    print("Login: isAuthenticated=${authProvider.isAuthenticated}, user=${authProvider.user}");
+    print("Page: isAuthenticated=${authProvider.isAuthenticated}, user=${authProvider.user}");
     if (mounted && authProvider.isAuthenticated && authProvider.user != null) {
       Navigator.pushReplacement(
         context,
@@ -32,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            authProvider.errorMessage ?? 'Login failed. Please try again.',
+            authProvider.errorMessage ?? 'Page failed. Please try again.',
             style: GoogleFonts.poppins(),
           ),
           backgroundColor: Colors.redAccent,
@@ -77,7 +77,7 @@ class _LoginPageState extends State<LoginPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Login to GrowSafe',
+                        'Page to GrowSafe',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
                           fontSize: constraints.maxWidth > 600 ? 32 : 28,
@@ -145,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               onPressed: _login,
                               child: Text(
-                                'Login',
+                                'Page',
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
                                   fontSize: constraints.maxWidth > 600 ? 18 : 16,

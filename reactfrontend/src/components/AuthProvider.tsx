@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const profile = await api.getProfile(data.access);
       setUser(profile);
     } catch (e: any) {
-      setError(e.response?.data?.error ?? 'Login failed');
+      setError(e.response?.data?.error ?? 'Page failed');
     } finally {
       setIsLoading(false);
     }

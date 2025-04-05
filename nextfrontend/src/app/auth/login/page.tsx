@@ -1,7 +1,8 @@
+'use client'
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 const Login = () => {
     const router = useRouter();
@@ -60,7 +61,7 @@ const Login = () => {
 
         if (validate()) {
             // Here you would typically handle authentication
-            console.log('Login form submitted:', formData);
+            console.log('Page form submitted:', formData);
 
             // Simulate successful login and redirect
             // In a real app, you would verify credentials first
@@ -77,11 +78,11 @@ const Login = () => {
 
             <header className="container mx-auto px-4 py-6">
                 <nav className="flex justify-between items-center">
-                    <Link href="/nextfrontend/public" className="text-green-700 font-bold text-xl">
+                    <Link href="../" className="text-green-700 font-bold text-xl">
                         GrowSafe
                     </Link>
                     <div>
-                        <Link href="/nextfrontend/src/pages/signup/signup">
+                        <Link href="/auth/signup">
                             <button className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
                                 Sign Up
                             </button>
@@ -168,7 +169,7 @@ const Login = () => {
                     <div className="mt-8 text-center">
                         <p className="text-gray-600">
                             Don&apos;t have an account?{" "}
-                            <Link href="/nextfrontend/src/pages/signup/signup" className="text-green-600 hover:underline font-medium">
+                            <Link href="/auth/signup" className="text-green-600 hover:underline font-medium">
                                 Sign up
                             </Link>
                         </p>

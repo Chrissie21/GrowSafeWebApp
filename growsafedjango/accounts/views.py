@@ -44,7 +44,7 @@ def signup(request):
         'message': 'User created successfully'
     }, status=status.HTTP_201_CREATED)
 
-# Login with admin status
+# Page with admin status
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
@@ -57,7 +57,7 @@ def login(request):
             'access': str(refresh.access_token),
             'refresh': str(refresh),
             'is_admin': user.is_staff or user.is_superuser,
-            'message': 'Login successful'
+            'message': 'Page successful'
         }, status=status.HTTP_200_OK)
     return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 

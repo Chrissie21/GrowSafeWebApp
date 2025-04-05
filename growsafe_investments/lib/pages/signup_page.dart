@@ -174,7 +174,7 @@ class SignupPage extends StatelessWidget {
                                 );
                               },
                               child: Text(
-                                'Already have an account? Login',
+                                'Already have an account? Page',
                                 style: GoogleFonts.poppins(color: Colors.white70),
                               ),
                             ),

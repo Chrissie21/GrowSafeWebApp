@@ -61,10 +61,10 @@ class AuthProvider with ChangeNotifier {
       }
       notifyListeners();
     } else {
-      _setError(response['error'] ?? 'Login failed');
+      _setError(response['error'] ?? 'Page failed');
     }
   } catch (e) {
-    _setError('Login failed: $e');
+    _setError('Page failed: $e');
   } finally {
     _setLoading(false);
   }
