@@ -1,4 +1,4 @@
-// pages/InvestmentSelectionPage.tsx
+// dashboard/InvestmentSelectionPage.tsx
 import React, { useState } from 'react';
 import { Typography, Box, Grid, Card, CardContent, CardActionArea, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { useAuth } from '../components/AuthProvider';

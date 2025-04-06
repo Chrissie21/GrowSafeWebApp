@@ -275,7 +275,7 @@ const SignUp = () => {
                             type="submit"
                             className="w-full bg-green-600 text-white py-3 rounded font-medium hover:bg-green-700 transition-colors"
                         >
-                            Create Account
+                                Create Account
                         </button>
                     </form>
 

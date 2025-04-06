@@ -65,7 +65,7 @@ const Login = () => {
 
             // Simulate successful login and redirect
             // In a real app, you would verify credentials first
-            router.push('/dashboard');
+            router.push('../dashboard');
         }
     };
 

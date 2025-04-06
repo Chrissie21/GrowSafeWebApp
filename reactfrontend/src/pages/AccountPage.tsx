@@ -1,4 +1,4 @@
-// src/pages/AccountPage.tsx
+// src/dashboard/AccountPage.tsx
 import React, { useState } from 'react';
 import { Typography, Box, Card, CardContent, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Grid } from '@mui/material';
 import { useAuth } from '../components/AuthProvider';

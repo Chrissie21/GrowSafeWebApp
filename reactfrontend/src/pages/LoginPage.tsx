@@ -1,4 +1,4 @@
-// pages/SignupPage.tsx
+// dashboard/SignupPage.tsx
 import React, { useState } from 'react';
 import { TextField, Button, Typography, Box, CircularProgress, Card } from '@mui/material';
 import { useAuth } from '../components/AuthProvider';

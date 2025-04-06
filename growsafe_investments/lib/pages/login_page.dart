@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:growsafe_investments/pages/signup_page.dart';
+import 'package:growsafe_investments/dashboard/signup_page.dart';
 import 'package:growsafe_investments/providers/auth_provider.dart';
 import 'package:growsafe_investments/screens/main_screen.dart';
 import 'package:provider/provider.dart';
