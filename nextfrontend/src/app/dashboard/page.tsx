@@ -87,17 +87,17 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="bg-white rounded-lg shadow p-6">
                         <h2 className="text-gray-500 text-sm uppercase font-medium">Total Balance</h2>
-                        <p className="text-3xl font-bold text-gray-800 mt-2">${userData.accountBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-bold text-gray-800 mt-2">Tsh{userData.accountBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         <p className="text-green-600 mt-1">+3.2% this month</p>
                     </div>
                     <div className="bg-white rounded-lg shadow p-6">
                         <h2 className="text-gray-500 text-sm uppercase font-medium">Investments Value</h2>
-                        <p className="text-3xl font-bold text-gray-800 mt-2">${userData.investmentsValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-bold text-gray-800 mt-2">Tsh{userData.investmentsValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         <p className="text-green-600 mt-1">+2.8% this month</p>
                     </div>
                     <div className="bg-white rounded-lg shadow p-6">
                         <h2 className="text-gray-500 text-sm uppercase font-medium">Available Cash</h2>
-                        <p className="text-3xl font-bold text-gray-800 mt-2">${userData.availableCash.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-bold text-gray-800 mt-2">Tsh{userData.availableCash.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         <button className="mt-3 text-sm px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
                             Add Funds
                         </button>
