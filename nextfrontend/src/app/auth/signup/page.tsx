@@ -114,8 +114,8 @@ const SignUp = () => {
     return (
         <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 flex flex-col">
             <Head>
-                <title>Sign Up | GrowSafe Investments</title>
-                <meta name="description" content="Create your GrowSafe Investments account" />
+                <title>Sign Up | GrowSafe Page</title>
+                <meta name="description" content="Create your GrowSafe Page account" />
             </Head>
 
             <header className="container mx-auto px-4 py-6">
@@ -292,7 +292,7 @@ const SignUp = () => {
 
             <footer className="bg-green-800 text-white py-6">
                 <div className="container mx-auto px-4 text-center">
-                    <p>&copy; {new Date().getFullYear()} GrowSafe Investments. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} GrowSafe Page. All rights reserved.</p>
                     <div className="mt-2">
                         <Link href="/terms" className="text-green-200 mx-2 hover:underline text-sm">Terms</Link>
                         <Link href="/privacy" className="text-green-200 mx-2 hover:underline text-sm">Privacy</Link>

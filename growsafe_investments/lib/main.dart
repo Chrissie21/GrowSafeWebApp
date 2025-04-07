@@ -20,7 +20,7 @@ class GrowSafeInvestmentsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'GrowSafe Investments',
+      title: 'GrowSafe Page',
       theme: ThemeData(
         primarySwatch: Colors.teal,
         scaffoldBackgroundColor: Colors.transparent,

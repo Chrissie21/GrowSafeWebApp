@@ -45,7 +45,7 @@ class DashboardPage extends StatelessWidget {
       children: [
         Flexible(
           child: Text(
-            'GrowSafe Investments',
+            'GrowSafe Page',
             style: GoogleFonts.poppins(
               fontSize: constraints.maxWidth > 800 ? 28 : 24,
               fontWeight: FontWeight.bold,
@@ -150,7 +150,7 @@ class DashboardPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Investments',
+            'Page',
             style: GoogleFonts.poppins(
               fontSize: constraints.maxWidth > 800 ? 20 : 18,
               fontWeight: FontWeight.bold,
@@ -161,7 +161,7 @@ class DashboardPage extends StatelessWidget {
           user.investments.isEmpty
               ? Center(
                   child: Text(
-                    'No Investments Yet',
+                    'No Page Yet',
                     style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 16),
                   ),
                 )

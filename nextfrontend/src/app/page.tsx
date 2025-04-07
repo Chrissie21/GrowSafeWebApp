@@ -6,8 +6,8 @@ export default function Home() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100">
             <Head>
-                <title>GrowSafe Investments | Secure Your Financial Future</title>
-                <meta name="description" content="GrowSafe Investments - Smart and secure investment options for your financial growth" />
+                <title>GrowSafe Page | Secure Your Financial Future</title>
+                <meta name="description" content="GrowSafe Page - Smart and secure investment options for your financial growth" />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
@@ -33,7 +33,7 @@ export default function Home() {
 
             <main className="container mx-auto px-4 pt-20 pb-16">
                 <div className="max-w-3xl mx-auto text-center">
-                    <h1 className="text-5xl font-bold text-green-800 mb-8">GrowSafe Investments</h1>
+                    <h1 className="text-5xl font-bold text-green-800 mb-8">GrowSafe Page</h1>
 
                     <p className="text-xl text-gray-700 mb-6">
                         Your trusted partner for secure and sustainable financial growth.
@@ -49,7 +49,7 @@ export default function Home() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                                     </svg>
                                 </div>
-                                <h3 className="font-medium text-gray-800 mb-2">Secure Investments</h3>
+                                <h3 className="font-medium text-gray-800 mb-2">Secure Page</h3>
                                 <p className="text-gray-600">Bank-level security protocols to protect your assets at all times.</p>
                             </div>
 
@@ -87,7 +87,7 @@ export default function Home() {
 
             <footer className="bg-green-800 text-white py-8">
                 <div className="container mx-auto px-4 text-center">
-                    <p>&copy; {new Date().getFullYear()} GrowSafe Investments. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} GrowSafe Page. All rights reserved.</p>
                     <div className="mt-4">
                         <Link href="/terms" className="text-green-200 mx-2 hover:underline">Terms</Link>
                         <Link href="/privacy" className="text-green-200 mx-2 hover:underline">Privacy</Link>

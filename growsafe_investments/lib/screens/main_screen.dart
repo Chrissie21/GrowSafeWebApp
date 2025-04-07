@@ -72,7 +72,7 @@ class _MainScreenState extends State<MainScreen> {
     return AppBar(
       title: FadeIn(
         child: Text(
-          'GrowSafe Investments',
+          'GrowSafe Page',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
             color: const Color(0xFF1A3C34),
