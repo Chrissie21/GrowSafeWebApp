@@ -4,7 +4,12 @@ import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/navigation";
 import api from "../../../lib/api";
-import { AxiosError } from "axios";
+import { AxiosError, isAxiosError } from "axios";
+
+// Define the shape of the error response from the backend
+interface ErrorResponse {
+  error?: string;
+}
 
 // Def the types of error states
 interface Errors {
@@ -44,7 +49,7 @@ const Login = () => {
 
   const validate = () => {
     let isValid = true;
-    const newErrors = { email: "", password: "" };
+    const newErrors = { email: "", password: "", general: "" };
 
     if (!formData.email) {
       newErrors.email = "Email is required";
@@ -76,7 +81,7 @@ const Login = () => {
           password: formData.password,
         });
 
-        const { access, refresh, is_admin } = response.data;
+        const { access, refresh } = response.data;
 
         // Store token in localStorage or sessionStorage bbased on rememberMe
         if (formData.rememberMe) {
@@ -89,12 +94,19 @@ const Login = () => {
 
         // Redirect to Dashboard
         router.push("../dashboard");
-      } catch (error: any) {
-        setErrors({
-          ...errors,
-          general:
-            error.response?.data?.error || "Login failed. Please try again.",
-        });
+      } catch (error: unknown) {
+        if (isAxiosError<ErrorResponse>(error)) {
+          setErrors({
+            ...errors,
+            general:
+              error.response?.data?.error || "Login failed. Please try again",
+          });
+        } else {
+          setErrors({
+            ...errors,
+            general: "An unexpected error occurred. Please try again.",
+          });
+        }
       }
     }
   };
