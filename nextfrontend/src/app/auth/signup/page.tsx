@@ -4,6 +4,11 @@ import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/navigation";
 import api from "../../../lib/api";
+import { AxiosError, isAxiosError } from "axios";
+
+interface ErrorResponse {
+  error?: string;
+}
 
 // Define types of error states
 interface Errors {
@@ -132,12 +137,19 @@ const SignUp = () => {
         localStorage.setItem("refresh_token", refresh);
 
         router.push("/welcome");
-      } catch (error: any) {
-        setErrors({
-          ...errors,
-          general:
-            error.response?.data?.error || "Signup failed. Please try again",
-        });
+      } catch (error: unknown) {
+        if (isAxiosError<ErrorResponse>(error)) {
+          setErrors({
+            ...errors,
+            general:
+              error.response?.data?.error || "Login failed. Please try again",
+          });
+        } else {
+          setErrors({
+            ...errors,
+            general: "An unexpected error occurred. Please try again.",
+          });
+        }
       }
     }
   };
