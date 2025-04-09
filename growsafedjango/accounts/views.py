@@ -120,13 +120,16 @@ def deposit(request):
         if amount <= 0:
             return Response({'error': 'Amount must be positive'}, status=status.HTTP_400_BAD_REQUEST)
         with transaction.atomic():
-            Transaction.objects.create(
+            tx = Transaction.objects.create(
                 user=request.user,
                 transaction_type='DEPOSIT',
                 amount=amount,
                 mobile_number=mobile_number
             )
-        return Response({'message': 'Deposit request submitted, pending admin approval'}, status=status.HTTP_201_CREATED)
+        return Response({
+            'message': 'Deposit request submitted, pending admin approval',
+            'transaction_id': str(tx.transaction_id)
+        }, status=status.HTTP_201_CREATED)
     except (ValueError, TypeError):
         return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
 
