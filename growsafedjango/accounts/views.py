@@ -309,7 +309,7 @@ def check_transaction_status(request, transaction_id):
             'created_at' : tx.created_at,
             'updated_at' : tx.updated_at
         })
-    except: Transaction.DoesNotExist:
+    except Transaction.DoesNotExist:
         return Response({
             'error': 'Transaction not found'
         }, status=404)

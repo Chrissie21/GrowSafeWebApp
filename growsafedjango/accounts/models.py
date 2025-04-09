@@ -62,7 +62,7 @@ class Transaction(models.Model):
 
 class TransactionStatusHistory(models.Model):
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='status_history')
-    status = models.CharField(max_length=20, choices=Transaction.STATUS_CHOIC)
+    status = models.CharField(max_length=20, choices=Transaction.STATUS_CHOICES)
     changed_at = models.DateTimeField(auto_now_add=True)
     changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
