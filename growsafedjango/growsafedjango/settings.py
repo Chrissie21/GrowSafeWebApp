@@ -155,8 +155,13 @@ CORS_ALLOW_CREDENTIALS = True
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=5), # Access token validity 
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=5), # Access token validity
     'REFRESH_TOKEN_LIFETIME': timedelta(days=10), #Refresh token validity
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
