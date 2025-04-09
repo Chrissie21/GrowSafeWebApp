@@ -295,3 +295,21 @@ def admin_update_mobile(request, user_id):
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     except UserProfile.DoesNotExist:
         return Response({'error': 'User profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_transaction_status(request, transaction_id):
+    try:
+        tx = Transaction.objects.get(transaction_id=transaction_id, user=request.user)
+        return Response({
+            'type' : tx.transaction_type,
+            'amount' : str(tx.amount),
+            'status' : tx.status,
+            'created_at' : tx.created_at,
+            'updated_at' : tx.updated_at
+        })
+    except: Transaction.DoesNotExist:
+        return Response({
+            'error': 'Transaction not found'
+        }, status=404)
