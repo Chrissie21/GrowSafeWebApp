@@ -92,7 +92,8 @@ def profile(request):
             'mobile_number': tx.mobile_number,
             'created_at': tx.created_at,
             'updated_at': tx.updated_at,
-            'notes': tx.notes
+            'notes': tx.notes,
+            'transaction_id': str(tx.transaction_id)
         }
         for tx in user.transactions.all()
     ]
@@ -226,7 +227,8 @@ def admin_list_transactions(request):
             'created_at': tx.created_at,
             'updated_at': tx.updated_at,
             'processed_by': tx.processed_by.username if tx.processed_by else None,
-            'notes': tx.notes
+            'notes': tx.notes,
+            'transaction': str(tx.transaction_id)
         }
         for tx in transactions
     ]
