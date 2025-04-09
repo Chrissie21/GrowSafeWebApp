@@ -13,7 +13,7 @@ interface ErrorResponse {
 
 // Def the types of error states
 interface Errors {
-  email: string;
+  usernameOrEmail: string;
   password: string;
   general: string;
 }
@@ -26,7 +26,7 @@ const Login = () => {
     rememberMe: false,
   });
   const [errors, setErrors] = useState<Errors>({
-    email: "",
+    usernameOrEmail: "",
     password: "",
     general: "",
   });
@@ -49,16 +49,28 @@ const Login = () => {
 
   const validate = () => {
     let isValid = true;
-    const newErrors = { email: "", password: "", general: "" };
+    const newErrors = { usernameOrEmail: "", password: "", general: "" };
 
+    // check if username or email is provided
     if (!formData.usernameOrEmail) {
-      newErrors.email = "Email is required";
+      newErrors.usernameOrEmail = "Email or Username is required";
       isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.usernameOrEmail)) {
-      newErrors.email = "Email is invalid";
-      isValid = false;
+    } else if (formData.usernameOrEmail.includes("@")) {
+      // Input contains '@', treat as Email
+      if (!/\S+@\S+\.\S+/.test(formData.usernameOrEmail)) {
+        newErrors.usernameOrEmail = "Please enter a valid email address";
+        isValid = false;
+      }
+    } else {
+      // Input doesn't contain '@', treat as Username
+      if (formData.usernameOrEmail.length < 3) {
+        newErrors.usernameOrEmail =
+          "Username must be at least 3 characters long";
+        isValid = false;
+      }
     }
 
+    // check password
     if (!formData.password) {
       newErrors.password = "Password is required";
       isValid = false;
@@ -77,13 +89,13 @@ const Login = () => {
     if (validate()) {
       try {
         const response = await api.post("login/", {
-          username: formData.usernameOrEmail,
+          usernameOrEmail: formData.usernameOrEmail,
           password: formData.password,
         });
 
         const { access, refresh } = response.data;
 
-        // Store token in localStorage or sessionStorage bbased on rememberMe
+        // Store token in localStorage or sessionStorage based on rememberMe
         if (formData.rememberMe) {
           localStorage.setItem("access_token", access);
           localStorage.setItem("refresh_token", refresh);
@@ -94,12 +106,14 @@ const Login = () => {
 
         // Redirect to Dashboard
         router.push("../dashboard");
-      } catch (error: unknown) {
-        if (isAxiosError<ErrorResponse>(error)) {
+      } catch (error) {
+        if (isAxiosError(error)) {
+          const axiosError = error as AxiosError<ErrorResponse>;
           setErrors({
             ...errors,
             general:
-              error.response?.data?.error || "Login failed. Please try again",
+              axiosError.response?.data?.error ||
+              "Login failed. Please try again",
           });
         } else {
           setErrors({
@@ -154,18 +168,20 @@ const Login = () => {
                 Username or Email Address
               </label>
               <input
-                type="email"
+                type="text"
                 id="usernameOrEmail"
                 name="usernameOrEmail"
                 value={formData.usernameOrEmail}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 rounded border ${
-                  errors.email ? "border-red-500" : "border-gray-300"
+                  errors.usernameOrEmail ? "border-red-500" : "border-gray-300"
                 } focus:outline-none focus:ring-2 focus:ring-green-500`}
                 placeholder="Username or you@example.com"
               />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              {errors.usernameOrEmail && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.usernameOrEmail}
+                </p>
               )}
             </div>
 
@@ -213,6 +229,12 @@ const Login = () => {
                 Remember me
               </label>
             </div>
+
+            {errors.general && (
+              <div className="mb-4 p-3 bg-red-50 text-red-700 rounded border border-red-200">
+                {errors.general}
+              </div>
+            )}
 
             <button
               type="submit"
