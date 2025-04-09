@@ -21,7 +21,7 @@ interface Errors {
 const Login = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    email: "",
+    usernameOrEmail: "",
     password: "",
     rememberMe: false,
   });
@@ -51,10 +51,10 @@ const Login = () => {
     let isValid = true;
     const newErrors = { email: "", password: "", general: "" };
 
-    if (!formData.email) {
+    if (!formData.usernameOrEmail) {
       newErrors.email = "Email is required";
       isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(formData.usernameOrEmail)) {
       newErrors.email = "Email is invalid";
       isValid = false;
     }
@@ -77,7 +77,7 @@ const Login = () => {
     if (validate()) {
       try {
         const response = await api.post("login/", {
-          username: formData.email,
+          username: formData.usernameOrEmail,
           password: formData.password,
         });
 
@@ -148,21 +148,21 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
               <label
-                htmlFor="email"
+                htmlFor="usernameOrEmail"
                 className="block text-gray-700 font-medium mb-2"
               >
-                Email Address
+                Username or Email Address
               </label>
               <input
                 type="email"
-                id="email"
-                name="email"
-                value={formData.email}
+                id="usernameOrEmail"
+                name="usernameOrEmail"
+                value={formData.usernameOrEmail}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 rounded border ${
                   errors.email ? "border-red-500" : "border-gray-300"
                 } focus:outline-none focus:ring-2 focus:ring-green-500`}
-                placeholder="you@example.com"
+                placeholder="Username or you@example.com"
               />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">{errors.email}</p>
