@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
+import uuid
 
 class Investment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='investments')
@@ -54,6 +55,7 @@ class Transaction(models.Model):
         related_name='processed_transactions', limit_choices_to={'is_staff': True}
     )  # Admin who processed it
     notes = models.TextField(blank=True, null=True)  # Optional notes (e.g., decline reason)
+    transaction_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     def __str__(self):
         return f"{self.transaction_type} - {self.user.username} - {self.amount} - {self.status}"
