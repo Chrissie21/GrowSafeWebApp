@@ -57,3 +57,9 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.transaction_type} - {self.user.username} - {self.amount} - {self.status}"
+
+class TransactionStatusHistory(models.Model):
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='status_history')
+    status = models.CharField(max_length=20, choices=Transaction.STATUS_CHOIC)
+    changed_at = models.DateTimeField(auto_now_add=True)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
