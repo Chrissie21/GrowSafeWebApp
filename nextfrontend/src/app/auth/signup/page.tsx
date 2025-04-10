@@ -150,7 +150,7 @@ const SignUp = () => {
         localStorage.setItem("access_token", access);
         localStorage.setItem("refresh_token", refresh);
 
-        router.push("/login");
+        router.push("../dashboard");
       } catch (error: unknown) {
         if (isAxiosError<ErrorResponse>(error)) {
           setErrors({
