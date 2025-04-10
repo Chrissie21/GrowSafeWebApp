@@ -48,9 +48,20 @@ def signup(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
-    username = request.data.get('usernameOrEmail')
+    username_or_email = request.data.get('usernameOrEmail')
     password = request.data.get('password')
-    user = authenticate(request, username=username, password=password)
+    user = authenticate(request, username=username_or_email, password=password)
+
+    if user is None and '@' in username_or_email:
+        try:
+            # Find user with the email
+            user_obj = User.objects.get(email=username_or_email)
+            # Then authenticate with they username
+            user = authenticate(request, username=user_obj.username, password=password)
+        except User.DoesNotExist:
+            # No user with the email exists
+            pass
+
     if user is not None:
         refresh = RefreshToken.for_user(user)
         return Response({
