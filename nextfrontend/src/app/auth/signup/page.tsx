@@ -13,6 +13,8 @@ interface ErrorResponse {
 // Define types of error states
 interface Errors {
   username: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -24,6 +26,8 @@ const SignUp = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
     username: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -31,6 +35,8 @@ const SignUp = () => {
   });
   const [errors, setErrors] = useState<Errors>({
     username: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -58,6 +64,8 @@ const SignUp = () => {
     let isValid = true;
     const newErrors = {
       username: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -71,6 +79,18 @@ const SignUp = () => {
       isValid = false;
     } else if (formData.username.length < 3) {
       newErrors.username = "Username must be at least 3 characters";
+      isValid = false;
+    }
+
+    // First name validation
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+      isValid = false;
+    }
+
+    // Last name validation
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
       isValid = false;
     }
 
@@ -121,6 +141,8 @@ const SignUp = () => {
           email: formData.email,
           password: formData.password,
           confirm_password: formData.confirmPassword,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
         });
 
         const { access, refresh } = response.data;
@@ -204,6 +226,55 @@ const SignUp = () => {
               <p className="text-gray-500 text-sm mt-1">
                 Must be at least 3 characters
               </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label
+                  htmlFor="firstName"
+                  className="block text-gray-700 font-medium mb-2"
+                >
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  id="firstName"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 rounded border ${
+                    errors.firstName ? "border-red-500" : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                  placeholder="John"
+                />
+                {errors.firstName && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.firstName}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label
+                  htmlFor="lastName"
+                  className="block text-gray-700 font-medium mb-2"
+                >
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 rounded border ${
+                    errors.lastName ? "border-red-500" : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                  placeholder="Doe"
+                />
+                {errors.lastName && (
+                  <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+                )}
+              </div>
             </div>
 
             <div className="mb-4">
