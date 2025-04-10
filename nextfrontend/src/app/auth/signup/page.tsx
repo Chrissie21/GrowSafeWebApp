@@ -12,8 +12,7 @@ interface ErrorResponse {
 
 // Define types of error states
 interface Errors {
-  firstName: string;
-  lastName: string;
+  username: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -24,16 +23,14 @@ interface Errors {
 const SignUp = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
     agreeTerms: false,
   });
   const [errors, setErrors] = useState<Errors>({
-    firstName: "",
-    lastName: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -60,8 +57,7 @@ const SignUp = () => {
   const validate = () => {
     let isValid = true;
     const newErrors = {
-      firstName: "",
-      lastName: "",
+      username: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -69,15 +65,12 @@ const SignUp = () => {
       general: "",
     };
 
-    // First name validation
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
+    // Username validation
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required";
       isValid = false;
-    }
-
-    // Last name validation
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
+    } else if (formData.username.length < 3) {
+      newErrors.username = "Username must be at least 3 characters";
       isValid = false;
     }
 
@@ -124,8 +117,7 @@ const SignUp = () => {
     if (validate()) {
       try {
         const response = await api.post("signup/", {
-          username:
-            "${formData.firstName.toLowerCase()}${formData.lastName.toLowerCase()}",
+          username: formData.username,
           email: formData.email,
           password: formData.password,
           confirm_password: formData.confirmPassword,
@@ -142,7 +134,7 @@ const SignUp = () => {
           setErrors({
             ...errors,
             general:
-              error.response?.data?.error || "Login failed. Please try again",
+              error.response?.data?.error || "Signup failed. Please try again",
           });
         } else {
           setErrors({
@@ -188,53 +180,30 @@ const SignUp = () => {
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label
-                  htmlFor="firstName"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 rounded border ${
-                    errors.firstName ? "border-red-500" : "border-gray-300"
-                  } focus:outline-none focus:ring-2 focus:ring-green-500`}
-                  placeholder="John"
-                />
-                {errors.firstName && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.firstName}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label
-                  htmlFor="lastName"
-                  className="block text-gray-700 font-medium mb-2"
-                >
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 rounded border ${
-                    errors.lastName ? "border-red-500" : "border-gray-300"
-                  } focus:outline-none focus:ring-2 focus:ring-green-500`}
-                  placeholder="Doe"
-                />
-                {errors.lastName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
-                )}
-              </div>
+            <div className="mb-4">
+              <label
+                htmlFor="username"
+                className="block text-gray-700 font-medium mb-2"
+              >
+                Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 rounded border ${
+                  errors.username ? "border-red-500" : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                placeholder="johndoe123"
+              />
+              {errors.username && (
+                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+              )}
+              <p className="text-gray-500 text-sm mt-1">
+                Must be at least 3 characters
+              </p>
             </div>
 
             <div className="mb-4">
@@ -345,6 +314,12 @@ const SignUp = () => {
                 <p className="text-red-500 text-sm mt-1">{errors.agreeTerms}</p>
               )}
             </div>
+
+            {errors.general && (
+              <div className="mb-4 p-3 bg-red-50 text-red-700 rounded border border-red-200">
+                {errors.general}
+              </div>
+            )}
 
             <button
               type="submit"
