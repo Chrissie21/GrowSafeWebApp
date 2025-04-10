@@ -19,11 +19,13 @@ def auth_root(request):
 @permission_classes([AllowAny])
 def signup(request):
     username = request.data.get('username')
+    first_name = request.data.get('first_name')
+    last_name = request.data.get('last_name')
     email = request.data.get('email')
     password = request.data.get('password')
     confirm_password = request.data.get('confirm_password')
 
-    if not all([username, email, password, confirm_password]):
+    if not all([username, email, first_name, last_name, password, confirm_password]):
         return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
 
     if password != confirm_password:
@@ -35,14 +37,26 @@ def signup(request):
     if User.objects.filter(email=email).exists():
         return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = User.objects.create_user(username=username, email=email, password=password)
-    UserProfile.objects.get_or_create(user=user)
-    refresh = RefreshToken.for_user(user)
-    return Response({
-        'access': str(refresh.access_token),
-        'refresh': str(refresh),
-        'message': 'User created successfully'
-    }, status=status.HTTP_201_CREATED)
+    try:
+        # Creating user with first_name and last_name
+        user = User.objects.create_user(
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            password=password
+        )
+        UserProfile.objects.get_or_create(user=user)
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'message': 'User created successfully'
+        }, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({
+            'error': f'Failed to create user: {str(e)}',
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 # Page with admin status
 @api_view(['POST'])
