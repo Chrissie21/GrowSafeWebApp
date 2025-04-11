@@ -3,145 +3,208 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Head from "next/head";
 import { useRouter, usePathname } from "next/navigation";
+import api from "../../lib/api";
 
 const Dashboard = () => {
   const router = useRouter();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // State for backend data
   const [userData, setUserData] = useState({
-    firstName: "Franck",
-    lastName: "Edmund",
-    email: "john.doe@example.com",
-    accountBalance: 15347.0,
-    investmentsValue: 12500.0,
-    availableCash: 3250.42,
+    firstName: "",
+    lastName: "",
+    email: "",
+    accountBalance: 0,
+    investmentsValue: 0,
+    availableCash: 0,
   });
 
-  const [portfolioData, setPortfolioData] = useState([
+  const [portfolioData, setPortfolioData] = useState<
     {
-      id: 1,
-      name: "Sustainable Energy Fund",
-      allocation: 35,
-      value: 4375.0,
-      change: 5.2,
-    },
+      id: number;
+      name: string;
+      allocation: number;
+      value: number;
+      change: number;
+    }[]
+  >([]);
+  const [recentTransactions, setRecentTransactions] = useState<
     {
-      id: 2,
-      name: "Green Technology ETF",
-      allocation: 25,
-      value: 3125.0,
-      change: -1.8,
-    },
-    {
-      id: 3,
-      name: "Eco-friendly Real Estate",
-      allocation: 20,
-      value: 2500.0,
-      change: 2.7,
-    },
-    {
-      id: 4,
-      name: "Water Conservation Fund",
-      allocation: 15,
-      value: 1875.0,
-      change: 3.5,
-    },
-    {
-      id: 5,
-      name: "Renewable Resources",
-      allocation: 5,
-      value: 625.0,
-      change: 8.3,
-    },
-  ]);
-
-  const [recentTransactions, setRecentTransactions] = useState([
-    {
-      id: 1,
-      date: "2025-04-01",
-      type: "Deposit",
-      amount: 1000.0,
-      status: "Completed",
-    },
-    {
-      id: 2,
-      date: "2025-03-25",
-      type: "Purchase",
-      investment: "Green Technology ETF",
-      amount: 500.0,
-      status: "Completed",
-    },
-    {
-      id: 3,
-      date: "2025-03-20",
-      type: "Sell",
-      investment: "Renewable Resources",
-      amount: 250.0,
-      status: "Completed",
-    },
-    {
-      id: 4,
-      date: "2025-03-15",
-      type: "Deposit",
-      amount: 2000.0,
-      status: "Completed",
-    },
-  ]);
-
-  const [marketNews, setMarketNews] = useState([
-    {
-      id: 1,
-      title: "New Solar Technology Boosts Efficiency by 30%",
-      date: "2025-04-05",
-      source: "Green Energy Today",
-    },
-    {
-      id: 2,
-      title: "Sustainable Investment Funds See Record Inflows",
-      date: "2025-04-03",
-      source: "Financial Times",
-    },
-    {
-      id: 3,
-      title: "Carbon Credit Markets Expand in Southeast Asia",
-      date: "2025-04-02",
-      source: "Climate Economics",
-    },
-    {
-      id: 4,
-      title: "Water Conservation Startups Attract Major Funding",
-      date: "2025-03-30",
-      source: "Tech Investor Weekly",
-    },
-  ]);
-
+      id: number;
+      date: string;
+      type: string;
+      investment: string;
+      amount: number;
+      status: string;
+    }[]
+  >([]);
+  const [marketNews, setMarketNews] = useState<
+    { id: number; title: string; date: string; source: string }[]
+  >([]); // Static for now
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Fetch data from backend
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get("profile/");
+        const data = response.data;
+
+        // Map backend data to frontend state
+        setUserData({
+          firstName: data.first_name || data.username,
+          lastName: data.last_name || "",
+          email: data.email,
+          accountBalance: parseFloat(data.total) || 0,
+          investmentsValue:
+            data.investments.reduce(
+              (sum: number, inv: { amount: string }) =>
+                sum + parseFloat(inv.amount),
+              0,
+            ) || 0,
+          availableCash: parseFloat(data.total) || 0, // Adjust if you add a specific field
+        });
+
+        setPortfolioData(
+          data.investments.map(
+            (
+              inv: { name: string; amount: string; daily_return_rate: string },
+              index: number,
+            ) => ({
+              id: index + 1,
+              name: inv.name,
+              allocation: calculateAllocation(inv.amount, data.investments),
+              value: parseFloat(inv.amount),
+              change: parseFloat(inv.daily_return_rate) * 100,
+            }),
+          ),
+        );
+
+        setRecentTransactions(
+          data.transactions.map(
+            (
+              tx: {
+                type: string;
+                amount: string;
+                status: string;
+                created_at: string;
+                notes: string;
+              },
+              index: number,
+            ) => ({
+              id: index + 1,
+              date: new Date(tx.created_at).toISOString().split("T")[0],
+              type: tx.type,
+              investment: tx.notes || "Cash",
+              amount: parseFloat(tx.amount),
+              status: tx.status,
+            }),
+          ),
+        );
+
+        // Static market news (no backend endpoint)
+        setMarketNews([
+          {
+            id: 1,
+            title: "New Solar Technology Boosts Efficiency by 30%",
+            date: "2025-04-05",
+            source: "Green Energy Today",
+          },
+          {
+            id: 2,
+            title: "Sustainable Investment Funds See Record Inflows",
+            date: "2025-04-03",
+            source: "Financial Times",
+          },
+          {
+            id: 3,
+            title: "Carbon Credit Markets Expand in Southeast Asia",
+            date: "2025-04-02",
+            source: "Climate Economics",
+          },
+          {
+            id: 4,
+            title: "Water Conservation Startups Attract Major Funding",
+            date: "2025-03-30",
+            source: "Tech Investor Weekly",
+          },
+        ]);
+
+        setLoading(false);
+      } catch (err: any) {
+        setError("Failed to load data. Please try again.");
+        setLoading(false);
+        if (err.response?.status === 401) {
+          router.push("/auth/login");
+        }
       }
     };
 
+    fetchData();
+  }, [router]);
+
+  // Calculate allocation percentage
+  const calculateAllocation = (
+    amount: string,
+    investments: { amount: string }[],
+  ) => {
+    const total = investments.reduce(
+      (sum, inv) => sum + parseFloat(inv.amount),
+      0,
+    );
+    return total > 0 ? ((parseFloat(amount) / total) * 100).toFixed(0) : 0;
+  };
+
+  // Scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleLogout = () => {
-    // Handle logout logic here
-    router.push("/auth/login");
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await api.post("logout/", {
+        refresh: localStorage.getItem("refresh_token"),
+      });
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      router.push("/auth/login");
+    } catch (err) {
+      console.error("Logout failed:", err);
+      router.push("/auth/login");
+    }
   };
 
   const navLinks = [
     { name: "Dashboard", path: "/dashboard" },
-    { name: "Investments", path: "./investments" },
+    { name: "Investments", path: "/investments" },
     { name: "Account", path: "/account" },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -155,11 +218,12 @@ const Dashboard = () => {
 
       {/* Navbar Component */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white shadow-md" : "bg-white/90 backdrop-blur-sm"}`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled ? "bg-white shadow-md" : "bg-white/90 backdrop-blur-sm"
+        }`}
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
             <div className="flex items-center">
               <Link href="/dashboard" className="flex items-center">
                 <div className="text-green-700 font-bold text-2xl">
@@ -167,8 +231,6 @@ const Dashboard = () => {
                 </div>
               </Link>
             </div>
-
-            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-1">
               <nav className="flex space-x-1">
                 {navLinks.map((link) => (
@@ -194,10 +256,7 @@ const Dashboard = () => {
                 ))}
               </nav>
             </div>
-
-            {/* User Menu & Mobile Menu Button */}
             <div className="flex items-center space-x-4">
-              {/* User Profile */}
               <div className="hidden md:flex items-center space-x-3 border-l pl-4 border-gray-200">
                 <div className="h-8 w-8 rounded-full bg-green-600 text-white flex items-center justify-center font-medium">
                   {userData.firstName.charAt(0)}
@@ -215,8 +274,6 @@ const Dashboard = () => {
                   </button>
                 </div>
               </div>
-
-              {/* Mobile Menu Button */}
               <button
                 className="md:hidden rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-green-700 focus:outline-none"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -246,10 +303,10 @@ const Dashboard = () => {
               </button>
             </div>
           </div>
-
-          {/* Mobile Menu */}
           <div
-            className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? "max-h-64" : "max-h-0"}`}
+            className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${
+              isMenuOpen ? "max-h-64" : "max-h-0"
+            }`}
           >
             <div className="px-2 pt-2 pb-3 space-y-1 border-t border-gray-200">
               {navLinks.map((link) => (
@@ -298,7 +355,6 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Main Content - Added margin-top to account for fixed navbar */}
       <main className="flex-grow container mx-auto px-4 py-8 mt-20">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">
@@ -309,7 +365,6 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Account Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-gray-500 text-sm uppercase font-medium">
@@ -348,13 +403,93 @@ const Dashboard = () => {
                 maximumFractionDigits: 2,
               })}
             </p>
-            <button className="mt-3 text-sm px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+            <button
+              onClick={async () => {
+                const amount = prompt("Enter deposit amount:");
+                if (amount && !isNaN(Number(amount)) && Number(amount) > 0) {
+                  try {
+                    const response = await api.post("deposit/", {
+                      amount,
+                      mobile_number: userData.mobile_number || "1234567890",
+                    });
+                    alert(response.data.message);
+                    // Refresh data
+                    const profileResponse = await api.get("profile/");
+                    const data = profileResponse.data;
+                    setUserData({
+                      firstName: data.first_name || data.username,
+                      lastName: data.last_name || "",
+                      email: data.email,
+                      accountBalance: parseFloat(data.total) || 0,
+                      investmentsValue:
+                        data.investments.reduce(
+                          (sum: number, inv: { amount: string }) =>
+                            sum + parseFloat(inv.amount),
+                          0,
+                        ) || 0,
+                      availableCash: parseFloat(data.total) || 0,
+                    });
+                    setPortfolioData(
+                      data.investments.map(
+                        (
+                          inv: {
+                            name: string;
+                            amount: string;
+                            daily_return_rate: string;
+                          },
+                          index: number,
+                        ) => ({
+                          id: index + 1,
+                          name: inv.name,
+                          allocation: calculateAllocation(
+                            inv.amount,
+                            data.investments,
+                          ),
+                          value: parseFloat(inv.amount),
+                          change: parseFloat(inv.daily_return_rate) * 100,
+                        }),
+                      ),
+                    );
+                    setRecentTransactions(
+                      data.transactions.map(
+                        (
+                          tx: {
+                            type: string;
+                            amount: string;
+                            status: string;
+                            created_at: string;
+                            notes: string;
+                          },
+                          index: number,
+                        ) => ({
+                          id: index + 1,
+                          date: new Date(tx.created_at)
+                            .toISOString()
+                            .split("T")[0],
+                          type: tx.type,
+                          investment: tx.notes || "Cash",
+                          amount: parseFloat(tx.amount),
+                          status: tx.status,
+                        }),
+                      ),
+                    );
+                  } catch (err: any) {
+                    alert(
+                      "Deposit failed: " +
+                        (err.response?.data?.error || "Unknown error"),
+                    );
+                  }
+                } else {
+                  alert("Please enter a valid amount");
+                }
+              }}
+              className="mt-3 text-sm px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+            >
               Add Funds
             </button>
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="mb-6 border-b border-gray-200">
           <nav className="flex space-x-8">
             <button
@@ -390,11 +525,9 @@ const Dashboard = () => {
           </nav>
         </div>
 
-        {/* Tab Content */}
         <div className="mb-12">
           {activeTab === "overview" && (
             <div>
-              {/* Portfolio Allocation */}
               <div className="bg-white rounded-lg shadow mb-8">
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-xl font-bold text-gray-800">
@@ -437,7 +570,11 @@ const Dashboard = () => {
                               })}
                             </td>
                             <td
-                              className={`px-6 py-4 whitespace-nowrap text-sm ${item.change >= 0 ? "text-green-600" : "text-red-600"}`}
+                              className={`px-6 py-4 whitespace-nowrap text-sm ${
+                                item.change >= 0
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
                             >
                               {item.change >= 0 ? "+" : ""}
                               {item.change}%
@@ -450,7 +587,6 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Market News */}
               <div className="bg-white rounded-lg shadow">
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-xl font-bold text-gray-800">
@@ -533,17 +669,131 @@ const Dashboard = () => {
                             })}
                           </td>
                           <td
-                            className={`px-6 py-4 whitespace-nowrap text-sm ${item.change >= 0 ? "text-green-600" : "text-red-600"}`}
+                            className={`px-6 py-4 whitespace-nowrap text-sm ${
+                              item.change >= 0
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
                           >
                             {item.change >= 0 ? "+" : ""}
                             {item.change}%
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             <div className="flex space-x-2">
-                              <button className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs">
+                              <button
+                                onClick={async () => {
+                                  const amount = prompt(
+                                    `Enter amount to invest in ${item.name}:`,
+                                  );
+                                  if (
+                                    amount &&
+                                    !isNaN(Number(amount)) &&
+                                    Number(amount) > 0
+                                  ) {
+                                    try {
+                                      const response = await api.post(
+                                        "invest/",
+                                        {
+                                          name: item.name,
+                                          amount,
+                                          daily_return_rate: (
+                                            item.change / 100
+                                          ).toString(),
+                                        },
+                                      );
+                                      alert(response.data.message);
+                                      // Refresh data
+                                      const profileResponse =
+                                        await api.get("profile/");
+                                      const data = profileResponse.data;
+                                      setUserData({
+                                        firstName:
+                                          data.first_name || data.username,
+                                        lastName: data.last_name || "",
+                                        email: data.email,
+                                        accountBalance:
+                                          parseFloat(data.total) || 0,
+                                        investmentsValue:
+                                          data.investments.reduce(
+                                            (
+                                              sum: number,
+                                              inv: { amount: string },
+                                            ) => sum + parseFloat(inv.amount),
+                                            0,
+                                          ) || 0,
+                                        availableCash:
+                                          parseFloat(data.total) || 0,
+                                      });
+                                      setPortfolioData(
+                                        data.investments.map(
+                                          (
+                                            inv: {
+                                              name: string;
+                                              amount: string;
+                                              daily_return_rate: string;
+                                            },
+                                            index: number,
+                                          ) => ({
+                                            id: index + 1,
+                                            name: inv.name,
+                                            allocation: calculateAllocation(
+                                              inv.amount,
+                                              data.investments,
+                                            ),
+                                            value: parseFloat(inv.amount),
+                                            change:
+                                              parseFloat(
+                                                inv.daily_return_rate,
+                                              ) * 100,
+                                          }),
+                                        ),
+                                      );
+                                      setRecentTransactions(
+                                        data.transactions.map(
+                                          (
+                                            tx: {
+                                              type: string;
+                                              amount: string;
+                                              status: string;
+                                              created_at: string;
+                                              notes: string;
+                                            },
+                                            index: number,
+                                          ) => ({
+                                            id: index + 1,
+                                            date: new Date(tx.created_at)
+                                              .toISOString()
+                                              .split("T")[0],
+                                            type: tx.type,
+                                            investment: tx.notes || "Cash",
+                                            amount: parseFloat(tx.amount),
+                                            status: tx.status,
+                                          }),
+                                        ),
+                                      );
+                                    } catch (err: any) {
+                                      alert(
+                                        "Investment failed: " +
+                                          (err.response?.data?.error ||
+                                            "Unknown error"),
+                                      );
+                                    }
+                                  } else {
+                                    alert("Please enter a valid amount");
+                                  }
+                                }}
+                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs"
+                              >
                                 Buy
                               </button>
-                              <button className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-xs">
+                              <button
+                                className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-xs"
+                                onClick={() =>
+                                  alert(
+                                    "Sell functionality not implemented yet",
+                                  )
+                                }
+                              >
                                 Sell
                               </button>
                             </div>
@@ -603,9 +853,7 @@ const Dashboard = () => {
                             {transaction.type}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {transaction.investment
-                              ? transaction.investment
-                              : "Cash"}
+                            {transaction.investment}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             Tsh
@@ -615,7 +863,15 @@ const Dashboard = () => {
                             })}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            <span
+                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                transaction.status === "APPROVED"
+                                  ? "bg-green-100 text-green-800"
+                                  : transaction.status === "PENDING"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-red-100 text-red-800"
+                              }`}
+                            >
                               {transaction.status}
                             </span>
                           </td>
@@ -635,12 +891,10 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="bg-green-800 text-white py-6">
         <div className="container mx-auto px-4 text-center">
           <p>
-            &copy; {new Date().getFullYear()} GrowSafe Page. All rights
-            reserved.
+            © {new Date().getFullYear()} GrowSafe Page. All rights reserved.
           </p>
           <div className="mt-2">
             <Link
