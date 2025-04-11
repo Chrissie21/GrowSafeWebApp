@@ -4,6 +4,11 @@ import Link from "next/link";
 import Head from "next/head";
 import { useRouter, usePathname } from "next/navigation";
 import api from "../../lib/api";
+import { AxiosError } from "axios";
+
+interface ApiErrorResponse {
+  error?: string;
+}
 
 const Dashboard = () => {
   const router = useRouter();
@@ -13,14 +18,22 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // State for backend data
-  const [userData, setUserData] = useState({
+  const [userData, setUserData] = useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    accountBalance: number;
+    investmentsValue: number;
+    availableCash: number;
+    mobile_number?: string;
+  }>({
     firstName: "",
     lastName: "",
     email: "",
     accountBalance: 0,
     investmentsValue: 0,
     availableCash: 0,
+    mobile_number: "",
   });
 
   const [portfolioData, setPortfolioData] = useState<
@@ -44,10 +57,9 @@ const Dashboard = () => {
   >([]);
   const [marketNews, setMarketNews] = useState<
     { id: number; title: string; date: string; source: string }[]
-  >([]); // Static for now
+  >([]);
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Fetch data from backend
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -55,7 +67,6 @@ const Dashboard = () => {
         const response = await api.get("profile/");
         const data = response.data;
 
-        // Map backend data to frontend state
         setUserData({
           firstName: data.first_name || data.username,
           lastName: data.last_name || "",
@@ -67,7 +78,8 @@ const Dashboard = () => {
                 sum + parseFloat(inv.amount),
               0,
             ) || 0,
-          availableCash: parseFloat(data.total) || 0, // Adjust if you add a specific field
+          availableCash: parseFloat(data.total) || 0,
+          mobile_number: data.mobile_number || "",
         });
 
         setPortfolioData(
@@ -107,7 +119,6 @@ const Dashboard = () => {
           ),
         );
 
-        // Static market news (no backend endpoint)
         setMarketNews([
           {
             id: 1,
@@ -136,7 +147,7 @@ const Dashboard = () => {
         ]);
 
         setLoading(false);
-      } catch (err: any) {
+      } catch (err: AxiosError) {
         setError("Failed to load data. Please try again.");
         setLoading(false);
         if (err.response?.status === 401) {
@@ -148,7 +159,6 @@ const Dashboard = () => {
     fetchData();
   }, [router]);
 
-  // Calculate allocation percentage
   const calculateAllocation = (
     amount: string,
     investments: { amount: string }[],
@@ -160,7 +170,6 @@ const Dashboard = () => {
     return total > 0 ? ((parseFloat(amount) / total) * 100).toFixed(0) : 0;
   };
 
-  // Scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -169,7 +178,6 @@ const Dashboard = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Logout handler
   const handleLogout = async () => {
     try {
       await api.post("logout/", {
@@ -216,7 +224,6 @@ const Dashboard = () => {
         />
       </Head>
 
-      {/* Navbar Component */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled ? "bg-white shadow-md" : "bg-white/90 backdrop-blur-sm"
@@ -361,7 +368,7 @@ const Dashboard = () => {
             Welcome back, {userData.firstName}
           </h1>
           <p className="text-gray-600 mt-1">
-            Here's an overview of your investments
+            Here is an overview of your investments
           </p>
         </div>
 
@@ -412,8 +419,9 @@ const Dashboard = () => {
                       amount,
                       mobile_number: userData.mobile_number || "1234567890",
                     });
-                    alert(response.data.message);
-                    // Refresh data
+                    alert(
+                      `Deposit request submitted: ${response.data.message}`,
+                    );
                     const profileResponse = await api.get("profile/");
                     const data = profileResponse.data;
                     setUserData({
@@ -428,6 +436,7 @@ const Dashboard = () => {
                           0,
                         ) || 0,
                       availableCash: parseFloat(data.total) || 0,
+                      mobile_number: data.mobile_number || "",
                     });
                     setPortfolioData(
                       data.investments.map(
@@ -473,10 +482,9 @@ const Dashboard = () => {
                         }),
                       ),
                     );
-                  } catch (err: any) {
+                  } catch (err: AxiosError<ApiErrorResponse>) {
                     alert(
-                      "Deposit failed: " +
-                        (err.response?.data?.error || "Unknown error"),
+                      `Deposit failed: ${err.response?.data?.error || "Unknown error"}`,
                     );
                   }
                 } else {
@@ -683,7 +691,7 @@ const Dashboard = () => {
                               <button
                                 onClick={async () => {
                                   const amount = prompt(
-                                    `Enter amount to invest in ${item.name}:`,
+                                    "Enter amount to invest:",
                                   );
                                   if (
                                     amount &&
@@ -701,8 +709,9 @@ const Dashboard = () => {
                                           ).toString(),
                                         },
                                       );
-                                      alert(response.data.message);
-                                      // Refresh data
+                                      alert(
+                                        `Investment successful: ${response.data.message}`,
+                                      );
                                       const profileResponse =
                                         await api.get("profile/");
                                       const data = profileResponse.data;
@@ -723,6 +732,7 @@ const Dashboard = () => {
                                           ) || 0,
                                         availableCash:
                                           parseFloat(data.total) || 0,
+                                        mobile_number: data.mobile_number || "",
                                       });
                                       setPortfolioData(
                                         data.investments.map(
@@ -771,11 +781,9 @@ const Dashboard = () => {
                                           }),
                                         ),
                                       );
-                                    } catch (err: any) {
+                                    } catch (err: AxiosError<ApiErrorResponse>) {
                                       alert(
-                                        "Investment failed: " +
-                                          (err.response?.data?.error ||
-                                            "Unknown error"),
+                                        `Investment failed: ${err.response?.data?.error || "Unknown error"}`,
                                       );
                                     }
                                   } else {
@@ -894,7 +902,8 @@ const Dashboard = () => {
       <footer className="bg-green-800 text-white py-6">
         <div className="container mx-auto px-4 text-center">
           <p>
-            © {new Date().getFullYear()} GrowSafe Page. All rights reserved.
+            &copy; {new Date().getFullYear()} GrowSafe Page. All rights
+            reserved.
           </p>
           <div className="mt-2">
             <Link
