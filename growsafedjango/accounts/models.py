@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
 import uuid
+from uuid import uuid4
 
 class Investment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='investments')
@@ -44,6 +45,7 @@ class Transaction(models.Model):
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
+    transaction_id = models.UUIDField(default=uuid4, editable=False, unique=True)
     transaction_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
