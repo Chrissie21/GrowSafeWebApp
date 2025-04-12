@@ -102,38 +102,46 @@ def logout(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def profile(request):
-    user = request.user
-    profile = user.profile
-    profile.calculate_daily_earnings()
-    investments = [
-        {'name': inv.name, 'amount': str(inv.amount), 'daily_return_rate': str(inv.daily_return_rate)}
-        for inv in user.investments.all()
-    ]
-    transactions = [
-        {
-            'type': tx.transaction_type,
-            'amount': str(tx.amount),
-            'status': tx.status,
-            'mobile_number': tx.mobile_number,
-            'created_at': tx.created_at,
-            'updated_at': tx.updated_at,
-            'notes': tx.notes,
-            'transaction_id': str(tx.transaction_id)
-        }
-        for tx in user.transactions.all()
-    ]
-    return Response({
-        'username': user.username,
-        'email': user.email,
-        'total': str(profile.total),
-        'total_deposit': str(profile.total_deposit),
-        'total_withdraw': str(profile.total_withdraw),
-        'daily_earnings': str(profile.daily_earnings),
-        'mobile_number': profile.mobile_number,
-        'investments': investments,
-        'transactions': transactions,
-        'message': 'Profile retrieved'
-    }, status=status.HTTP_200_OK)
+    try:
+        user = request.user
+        profile = user.profile
+        profile.calculate_daily_earnings()
+        investments = [
+            {'name': inv.name, 'amount': str(inv.amount), 'daily_return_rate': str(inv.daily_return_rate)}
+            for inv in user.investments.all()
+        ]
+        transactions = [
+            {
+                'type': tx.transaction_type,
+                'amount': str(tx.amount),
+                'status': tx.status,
+                'mobile_number': tx.mobile_number,
+                'created_at': tx.created_at,
+                'updated_at': tx.updated_at,
+                'notes': tx.notes,
+                'transaction_id': str(tx.transaction_id)
+            }
+            for tx in user.transactions.all()
+        ]
+        return Response({
+            'username': user.username,
+            'email': user.email,
+            'total': str(profile.total),
+            'total_deposit': str(profile.total_deposit),
+            'total_withdraw': str(profile.total_withdraw),
+            'daily_earnings': str(profile.daily_earnings),
+            'mobile_number': profile.mobile_number,
+            'investments': investments,
+            'transactions': transactions,
+            'message': 'Profile retrieved'
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        print("Error in profile view:", str(e))
+        traceback.print_exc()
+        return Response(
+            {"error": "Something went wrong in the profile view."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 # Deposit (creates pending transaction)
 @api_view(['POST'])
