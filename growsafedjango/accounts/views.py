@@ -104,7 +104,7 @@ def logout(request):
 def profile(request):
     try:
         user = request.user
-        profile = user.profile
+        profile, _ = UserProfile.objects.get_or_create(user=user)
         profile.calculate_daily_earnings()
         investments = [
             {'name': inv.name, 'amount': str(inv.amount), 'daily_return_rate': str(inv.daily_return_rate)}
