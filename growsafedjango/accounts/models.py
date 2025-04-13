@@ -17,6 +17,7 @@ class Investment(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     total = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    address = models.TextField(null=True, blank=True)
     total_deposit = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     total_withdraw = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     daily_earnings = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
