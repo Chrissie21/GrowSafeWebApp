@@ -10,6 +10,8 @@ from .models import UserProfile, Investment, Transaction
 from decimal import Decimal
 from django.db import transaction
 from .models import AccountActivity
+import traceback
+from .models import UserProfile, AccountActivity
 
 # Root endpoint
 def auth_root(request):
@@ -107,43 +109,73 @@ def logout(request):
     except Exception:
         return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Profile with transaction history
-@api_view(['GET'])
+
+@api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def profile(request):
     try:
         user = request.user
         profile, _ = UserProfile.objects.get_or_create(user=user)
-        profile.calculate_daily_earnings()
-        investments = [
-            {'name': inv.name, 'amount': str(inv.amount), 'daily_return_rate': str(inv.daily_return_rate)}
-            for inv in user.investments.all()
-        ]
-        transactions = [
-            {
-                'type': tx.transaction_type,
-                'amount': str(tx.amount),
-                'status': tx.status,
-                'mobile_number': tx.mobile_number,
-                'created_at': tx.created_at,
-                'updated_at': tx.updated_at,
-                'notes': tx.notes,
-                'transaction_id': str(tx.transaction_id)
-            }
-            for tx in user.transactions.all()
-        ]
-        return Response({
-            'username': user.username,
-            'email': user.email,
-            'total': str(profile.total),
-            'total_deposit': str(profile.total_deposit),
-            'total_withdraw': str(profile.total_withdraw),
-            'daily_earnings': str(profile.daily_earnings),
-            'mobile_number': profile.mobile_number,
-            'investments': investments,
-            'transactions': transactions,
-            'message': 'Profile retrieved'
-        }, status=status.HTTP_200_OK)
+
+        if request.method == 'GET':
+            profile.calculate_daily_earnings()
+            investments = [
+                {'name': inv.name, 'amount': str(inv.amount), 'daily_return_rate': str(inv.daily_return_rate)}
+                for inv in user.investments.all()
+            ]
+            transactions = [
+                {
+                    'type': tx.transaction_type,
+                    'amount': str(tx.amount),
+                    'status': tx.status,
+                    'mobile_number': tx.mobile_number,
+                    'created_at': tx.created_at.isoformat(),
+                    'updated_at': tx.updated_at.isoformat(),
+                    'notes': tx.notes,
+                    'transaction_id': str(tx.transaction_id)
+                }
+                for tx in user.transactions.all()
+            ]
+            return Response({
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'total': str(profile.total),
+                'total_deposit': str(profile.total_deposit),
+                'total_withdraw': str(profile.total_withdraw),
+                'daily_earnings': str(profile.daily_earnings),
+                'mobile_number': profile.mobile_number,
+                'address': profile.address or '',
+                'joined_date': user.date_joined.isoformat(),
+                'investments': investments,
+                'transactions': transactions,
+                'message': 'Profile retrieved'
+            }, status=status.HTTP_200_OK)
+
+        elif request.method == 'PUT':
+            data = request.data
+            # Update User fields
+            user.first_name = data.get('first_name', user.first_name)
+            user.last_name = data.get('last_name', user.last_name)
+            user.email = data.get('email', user.email)
+            # Update UserProfile fields
+            profile.mobile_number = data.get('mobile_number', profile.mobile_number)
+            profile.address = data.get('address', profile.address)
+            # Save changes
+            user.save()
+            profile.save()
+            # Log the activity
+            AccountActivity.objects.create(
+                user=user,
+                action="Profile updated",
+                ip_address=request.META.get('REMOTE_ADDR', 'Unknown'),
+                device=request.META.get('HTTP_USER_AGENT', 'Unknown'),
+            )
+            return Response({
+                'message': 'Profile updated successfully'
+            }, status=status.HTTP_200_OK)
+
     except Exception as e:
         print("Error in profile view:", str(e))
         traceback.print_exc()
