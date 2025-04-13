@@ -9,7 +9,6 @@ from django.http import JsonResponse
 from .models import UserProfile, Investment, Transaction
 from decimal import Decimal
 from django.db import transaction
-from .models import AccountActivity
 import traceback
 from .models import UserProfile, AccountActivity
 from django.contrib.auth import update_session_auth_hash
