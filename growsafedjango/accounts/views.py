@@ -79,6 +79,14 @@ def login(request):
 
     if user is not None:
         refresh = RefreshToken.for_user(user)
+
+        # Log in the login activity
+        AccountActivity.objects.create(
+            user=user,
+            action='Logged in',
+            ip_address=request.META.get('REMOTE_ADDR', 'Unknown'),
+            device=request.META.get('HTTP_USER_AGENT', 'Unknown')
+        )
         return Response({
             'access': str(refresh.access_token),
             'refresh': str(refresh),
