@@ -392,13 +392,25 @@ def check_transaction_status(request, transaction_id):
 @api_view(['GET'])
 @permission_classes(IsAuthenticated)
 def account_activity(request):
-    activities = AccountActivity.object.filter(user=request.user).order_by('-timestamp')[:10]
-    return Response [(
-        {
-            'id': activity.id,
-            'date': activity.timestamp.isoformat(),
-            'action': activity.action,
-            'ip': activity.ip_address,
-            'device': activity.device,
-        } for activity in activities
-    )]
+    try:
+        print("Fetching activities for user:", request.user.username)  # Debug log
+        activities = AccountActivity.objects.filter(user=request.user).order_by('-timestamp')[:10]
+        response_data = [
+            {
+                'id': activity.id,
+                'date': activity.timestamp.isoformat(),
+                'action': activity.action,
+                'ip': activity.ip_address,
+                'device': activity.device,
+            }
+            for activity in activities
+        ]
+        print("Activities fetched:", response_data)  # Debug log
+        return Response(response_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        print("Error in account_activity view:", str(e))
+        traceback.print_exc()
+        return Response(
+            {"error": f"Failed to fetch account activity: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
