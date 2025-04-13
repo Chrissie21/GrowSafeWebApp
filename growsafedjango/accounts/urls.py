@@ -13,6 +13,7 @@ urlpatterns = [
     path('invest/', views.invest, name='invest'),
     path('token/refresh/', views.refresh_token, name='token_refresh'),
     path('account-activity/', views.account_activity, name='account_activity'),
+    path('change-password/'), views.change_password, name='change_password'
     # Admin endpoints
     path('admin/transactions/', views.admin_list_transactions, name='admin_list_transactions'),
     path('admin/transaction/<int:transaction_id>/approve/', views.admin_approve_transaction, name='admin_approve_transaction'),

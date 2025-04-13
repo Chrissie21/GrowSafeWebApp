@@ -12,6 +12,7 @@ from django.db import transaction
 from .models import AccountActivity
 import traceback
 from .models import UserProfile, AccountActivity
+from django.contrib.auth import update_session_auth_hash
 
 # Root endpoint
 def auth_root(request):
@@ -395,6 +396,7 @@ def account_activity(request):
     try:
         print("Fetching activities for user:", request.user.username)  # Debug log
         activities = AccountActivity.objects.filter(user=request.user).order_by('-timestamp')[:10]
+        print(f"Found {len(activities)} activities")  # Debug log
         response_data = [
             {
                 'id': activity.id,
@@ -405,12 +407,65 @@ def account_activity(request):
             }
             for activity in activities
         ]
-        print("Activities fetched:", response_data)  # Debug log
+        print("Response data:", response_data)  # Debug log
         return Response(response_data, status=status.HTTP_200_OK)
+    except AccountActivity.DoesNotExist:
+        print("No activities found for user:", request.user.username)
+        return Response([], status=status.HTTP_200_OK)  # Return empty list if none exist
     except Exception as e:
         print("Error in account_activity view:", str(e))
         traceback.print_exc()
         return Response(
             {"error": f"Failed to fetch account activity: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    try:
+        user = request.user
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+
+        if not current_password or not new_password:
+            return Response(
+                {'error': 'Current and new passwords are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not user.check_password(current_password):
+            return Response(
+                {'error': 'Current password is incorrect'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if len(new_password) < 8:
+            return Response(
+                {'error': 'New password must be at least 8 characters'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(new_password)
+        user.save()
+        update_session_auth_hash(request, user)  # Keep user logged in
+
+        # Log the activity
+        AccountActivity.objects.create(
+            user=user,
+            action="Password updated",
+            ip_address=request.META.get('REMOTE_ADDR', 'Unknown'),
+            device=request.META.get('HTTP_USER_AGENT', 'Unknown'),
+        )
+
+        return Response(
+            {'message': 'Password changed successfully'},
+            status=status.HTTP_200_OK
+        )
+    except Exception as e:
+        print("Error in change_password view:", str(e))
+        traceback.print_exc()
+        return Response(
+            {"error": f"Failed to change password: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

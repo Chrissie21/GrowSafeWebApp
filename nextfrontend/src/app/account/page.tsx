@@ -48,8 +48,8 @@ const Account = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch user profile
         const profileResponse = await api.get("profile/");
+        console.log("Profile response:", profileResponse.data);
         setUserData({
           firstName: profileResponse.data.first_name || "",
           lastName: profileResponse.data.last_name || "",
@@ -59,13 +59,17 @@ const Account = () => {
           joinedDate: profileResponse.data.joined_date || "",
         });
 
-        // Fetch account activity
         const activityResponse = await api.get("account-activity/");
+        console.log("Activity response:", activityResponse.data);
         setAccountActivity(activityResponse.data);
 
         setLoading(false);
       } catch (err: unknown) {
         console.error("Fetch error:", err);
+        if (err instanceof AxiosError) {
+          console.error("Error response:", err.response?.data);
+          console.error("Error status:", err.response?.status);
+        }
         setError("Failed to load account data. Please try again.");
         setLoading(false);
         if (err instanceof AxiosError && err.response?.status === 401) {
