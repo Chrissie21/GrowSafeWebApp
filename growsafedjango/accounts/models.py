@@ -70,3 +70,14 @@ class TransactionStatusHistory(models.Model):
 
     def __str__(self):
         return f"{self.transaction.code}-> {self.status} by {self.changed_by}"
+
+
+class AccountActivity(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    action = models.CharField(max_length=100)
+    ip_address = models.CharField(max_length=45)
+    device = models.CharField(max_length=200)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.action} at {self.timestamp}"
