@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Head from "next/head";
 import { useRouter, usePathname } from "next/navigation";
-import api from "../../lib/api"; // Adjust path based on your structure
+import api from "../../lib/api";
 import { AxiosError } from "axios";
 
 interface UserData {
