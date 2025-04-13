@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from .models import UserProfile, Investment, Transaction
 from decimal import Decimal
 from django.db import transaction
+from .models import AccountActivity
 
 # Root endpoint
 def auth_root(request):
@@ -346,3 +347,18 @@ def check_transaction_status(request, transaction_id):
         return Response({
             'error': 'Transaction not found'
         }, status=404)
+
+
+@api_view(['GET'])
+@permission_classes(IsAuthenticated)
+def account_activity(request):
+    activities = AccountActivity.object.filter(user=request.user).order_by('-timestamp')[:10]
+    return Response [(
+        {
+            'id': activity.id,
+            'date': activity.timestamp.isoformat(),
+            'action': activity.action,
+            'ip': activity.ip_address,
+            'device': activity.device,
+        } for activity in activities
+    )]
