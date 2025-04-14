@@ -236,6 +236,30 @@ def withdraw(request):
         return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
 
 # Invest (unchanged, but wrapped in transaction)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def available_investments(request):
+    try:
+        options = InvestmentOption.objects.all()
+        response_data = [
+            {
+                'id': option.id,
+                'name': option.name,
+                'min_investment': str(option.min_investment),
+                'expected_return': str(option.expected_return),
+                'risk_level': option.risk_level
+            }
+            for option in options
+        ]
+        return Response(response_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(f"Error in available_investments: {str(e)}")
+        return Response(
+            {"error": f"Failed to fetch investment options: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @api_view(['POST'])
@@ -466,29 +490,5 @@ def change_password(request):
         traceback.print_exc()
         return Response(
             {"error": f"Failed to change password: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def available_investments(request):
-    try:
-        options = InvestmentOption.objects.all()
-        response_data = [
-            {
-                'id': option.id,
-                'name': option.name,
-                'min_investment': str(option.min_investment),
-                'expected_return': str(option.expected_return),
-                'risk_level': option.risk_level
-            }
-            for option in options
-        ]
-        return Response(response_data, status=status.HTTP_200_OK)
-    except Exception as e:
-        print(f"Error in available_investments: {str(e)}")
-        return Response(
-            {"error": f"Failed to fetch investment options: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import api from "../../lib/api";
 import { AxiosError } from "axios";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Investment {
   id: number;
@@ -36,6 +37,7 @@ const Page = () => {
   const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [investing, setInvesting] = useState(false);
 
   const [userData, setUserData] = useState<UserData>({
     firstName: "",
@@ -75,11 +77,32 @@ const Page = () => {
       } catch (err: unknown) {
         console.error("Fetch error:", err);
         if (err instanceof AxiosError) {
-          setError(err.response?.data?.error || "Failed to load investments");
           if (err.response?.status === 401) {
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("refresh_token");
-            router.push("/auth/login");
+            try {
+              const refreshToken = localStorage.getItem("refresh_token");
+              const refreshResponse = await api.post("token/refresh/", {
+                refresh: refreshToken,
+              });
+              localStorage.setItem("access_token", refreshResponse.data.access);
+              // Retry original requests
+              const profileResponse = await api.get("profile/");
+              setUserData({
+                firstName: profileResponse.data.first_name || "",
+                lastName: profileResponse.data.last_name || "",
+                email: profileResponse.data.email || "",
+                total: profileResponse.data.total || "0.00",
+              });
+              setPortfolioData(profileResponse.data.investments || []);
+              const optionsResponse = await api.get("available-investments/");
+              setAvailableInvestments(optionsResponse.data || []);
+            } catch (refreshErr) {
+              console.error("Refresh token error:", refreshErr);
+              localStorage.removeItem("access_token");
+              localStorage.removeItem("refresh_token");
+              router.push("/auth/login");
+            }
+          } else {
+            setError(err.response?.data?.error || "Failed to load investments");
           }
         }
       } finally {
@@ -114,12 +137,30 @@ const Page = () => {
     setInvestModal({ open: true, option, amount: "" });
   };
 
+  const handleSell = (investment: Investment) => {
+    alert("Sell functionality coming soon!");
+    // Future: POST to /api/auth/sell/ with investment.id
+  };
+
   const confirmInvest = async () => {
     if (!investModal.option || !investModal.amount) {
       alert("Please enter an amount");
       return;
     }
+    const amount = parseFloat(investModal.amount);
+    const minInvestment = parseFloat(investModal.option.min_investment);
+    if (isNaN(amount) || amount < minInvestment) {
+      alert(
+        `Amount must be at least Tsh${minInvestment.toLocaleString("en-US")}`,
+      );
+      return;
+    }
+    if (amount > parseFloat(userData.total)) {
+      alert("Insufficient balance");
+      return;
+    }
     try {
+      setInvesting(true);
       const response = await api.post("invest/", {
         option_id: investModal.option.id,
         amount: investModal.amount,
@@ -135,6 +176,8 @@ const Page = () => {
           ? err.response?.data?.error
           : "Investment failed",
       );
+    } finally {
+      setInvesting(false);
     }
   };
 
@@ -154,7 +197,11 @@ const Page = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        Loading...
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1 }}
+          className="h-8 w-8 border-4 border-green-600 border-t-transparent rounded-full"
+        />
       </div>
     );
   }
@@ -317,7 +364,12 @@ const Page = () => {
       </header>
 
       <main className="flex-grow container mx-auto px-4 py-8 mt-20">
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
           <h1 className="text-3xl font-bold text-gray-800">Your Investments</h1>
           <p className="text-gray-600 mt-1">
             Manage and explore investment opportunities. Balance: Tsh
@@ -325,43 +377,50 @@ const Page = () => {
               minimumFractionDigits: 2,
             })}
           </p>
-        </div>
+        </motion.div>
 
         {/* Portfolio Chart */}
-        {portfolioData.length > 0 && (
-          <div className="mb-12 bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">
-              Portfolio Allocation
-            </h2>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number) =>
-                      `Tsh${value.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
-                    }
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {portfolioData.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mb-12 bg-white rounded-lg shadow p-6"
+            >
+              <h2 className="text-xl font-bold text-gray-800 mb-4">
+                Portfolio Allocation
+              </h2>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number) =>
+                        `Tsh${value.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                      }
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Tabs */}
         <div className="mb-6 border-b border-gray-200">
@@ -390,7 +449,12 @@ const Page = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="mb-12">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mb-12"
+        >
           {activeTab === "current" && (
             <div className="bg-white rounded-lg shadow">
               <div className="p-6 border-b border-gray-200">
@@ -400,9 +464,13 @@ const Page = () => {
               </div>
               <div className="p-6">
                 {portfolioData.length === 0 ? (
-                  <p className="text-gray-600">
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-gray-600"
+                  >
                     No investments yet. Explore available options!
-                  </p>
+                  </motion.p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
@@ -424,7 +492,12 @@ const Page = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {portfolioData.map((item) => (
-                          <tr key={item.id}>
+                          <motion.tr
+                            key={item.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                          >
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {item.name}
                             </td>
@@ -441,22 +514,30 @@ const Page = () => {
                               %
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <button
-                                onClick={() =>
-                                  handleInvest({
-                                    id: item.id,
-                                    name: item.name,
-                                    min_investment: "0",
-                                    expected_return: item.daily_return_rate,
-                                    risk_level: "",
-                                  })
-                                }
-                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs"
-                              >
-                                Buy More
-                              </button>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() =>
+                                    handleInvest({
+                                      id: item.id,
+                                      name: item.name,
+                                      min_investment: "0",
+                                      expected_return: item.daily_return_rate,
+                                      risk_level: "",
+                                    })
+                                  }
+                                  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs"
+                                >
+                                  Buy More
+                                </button>
+                                <button
+                                  onClick={() => handleSell(item)}
+                                  className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-xs"
+                                >
+                                  Sell
+                                </button>
+                              </div>
                             </td>
-                          </tr>
+                          </motion.tr>
                         ))}
                       </tbody>
                     </table>
@@ -476,8 +557,11 @@ const Page = () => {
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {availableInvestments.map((investment) => (
-                    <div
+                    <motion.div
                       key={investment.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
                       className="border rounded-lg p-4 hover:shadow-md transition-shadow"
                     >
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -499,54 +583,69 @@ const Page = () => {
                       >
                         Invest Now
                       </button>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
       </main>
 
       {/* Investment Modal */}
-      {investModal.open && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">
-              Invest in {investModal.option?.name}
-            </h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Minimum: Tsh
-              {parseFloat(
-                investModal.option?.min_investment || "0",
-              ).toLocaleString("en-US")}
-            </p>
-            <input
-              type="number"
-              placeholder="Enter amount"
-              className="w-full p-2 border rounded mb-4"
-              value={investModal.amount || ""}
-              onChange={(e) =>
-                setInvestModal({ ...investModal, amount: e.target.value })
-              }
-            />
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setInvestModal({ open: false })}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmInvest}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {investModal.open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-lg p-6 w-full max-w-md"
+            >
+              <h2 className="text-xl font-bold text-gray-800 mb-4">
+                Invest in {investModal.option?.name}
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Minimum: Tsh
+                {parseFloat(
+                  investModal.option?.min_investment || "0",
+                ).toLocaleString("en-US")}
+              </p>
+              <input
+                type="number"
+                placeholder="Enter amount"
+                className="w-full p-2 border rounded mb-4"
+                value={investModal.amount || ""}
+                onChange={(e) =>
+                  setInvestModal({ ...investModal, amount: e.target.value })
+                }
+                disabled={investing}
+              />
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setInvestModal({ open: false })}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                  disabled={investing}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmInvest}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
+                  disabled={investing}
+                >
+                  {investing ? "Investing..." : "Confirm"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <footer className="bg-green-800 text-white py-6">
         <div className="container mx-auto px-4 text-center">
