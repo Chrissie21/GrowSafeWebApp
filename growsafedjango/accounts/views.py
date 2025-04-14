@@ -238,15 +238,16 @@ def withdraw(request):
 # Invest (unchanged, but wrapped in transaction)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def invest(request):
-    name = request.data.get('name')
+    option_id = request.data.get('option_id')
     amount = request.data.get('amount')
-    daily_return_rate = request.data.get('daily_return_rate')
     try:
         amount = Decimal(amount)
-        daily_return_rate = Decimal(daily_return_rate)
-        if amount <= 0 or daily_return_rate <= 0:
-            return Response({'error': 'Amount and return rate must be positive'}, status=status.HTTP_400_BAD_REQUEST)
+        option = InvestmentOption.objects.get(id=option_id)
+        if amount < option.min_investment:
+            return Response({'error': f'Amount must be at least {option.min_investment}'}, status=status.HTTP_400_BAD_REQUEST)
         profile = request.user.profile
         if profile.total < amount:
             return Response({'error': 'Insufficient balance'}, status=status.HTTP_400_BAD_REQUEST)
@@ -254,9 +255,10 @@ def invest(request):
             profile.total -= amount
             investment = Investment.objects.create(
                 user=request.user,
-                name=name,
+                option=option,
+                name=option.name,
                 amount=amount,
-                daily_return_rate=daily_return_rate
+                daily_return_rate=option.expected_return / 100  # Convert percentage to decimal
             )
             profile.save()
         return Response({
@@ -268,9 +270,10 @@ def invest(request):
             },
             'total': str(profile.total)
         }, status=status.HTTP_201_CREATED)
+    except InvestmentOption.DoesNotExist:
+        return Response({'error': 'Investment option not found'}, status=status.HTTP_404_NOT_FOUND)
     except (ValueError, TypeError):
         return Response({'error': 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
-
 # Refresh Token
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -284,6 +287,7 @@ def refresh_token(request):
         return Response({'access': str(access_token)}, status=status.HTTP_200_OK)
     except Exception:
         return Response({'error': 'Invalid refresh token'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 # Admin: List all transactions
 @api_view(['GET'])
