@@ -137,9 +137,21 @@ const Page = () => {
     setInvestModal({ open: true, option, amount: "" });
   };
 
-  const handleSell = (investment: Investment) => {
-    alert("Sell functionality coming soon!");
-    // Future: POST to /api/auth/sell/ with investment.id
+  const handleSell = async (investment: Investment) => {
+    try {
+      const response = await api.post("sell/", {
+        investment_id: investment.id,
+      });
+      setPortfolioData(
+        portfolioData.filter((item) => item.id !== investment.id),
+      );
+      setUserData({ ...userData, total: response.data.total });
+      alert("Investment sold!");
+    } catch (err: unknown) {
+      alert(
+        err instanceof AxiosError ? err.response?.data?.error : "Sell failed",
+      );
+    }
   };
 
   const confirmInvest = async () => {
