@@ -5,7 +5,7 @@ import Head from "next/head";
 import { useRouter, usePathname } from "next/navigation";
 import api from "../../lib/api";
 import { AxiosError } from "axios";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts"; // For chart
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 interface Investment {
   id: number;
@@ -54,6 +54,7 @@ const Page = () => {
   const [investModal, setInvestModal] = useState<{
     open: boolean;
     option?: InvestmentOption;
+    amount?: string;
   }>({ open: false });
 
   useEffect(() => {
@@ -109,16 +110,19 @@ const Page = () => {
     }
   };
 
-  const handleInvest = async (option: InvestmentOption) => {
-    setInvestModal({ open: true, option });
+  const handleInvest = (option: InvestmentOption) => {
+    setInvestModal({ open: true, option, amount: "" });
   };
 
-  const confirmInvest = async (amount: string) => {
-    if (!investModal.option) return;
+  const confirmInvest = async () => {
+    if (!investModal.option || !investModal.amount) {
+      alert("Please enter an amount");
+      return;
+    }
     try {
       const response = await api.post("invest/", {
         option_id: investModal.option.id,
-        amount,
+        amount: investModal.amount,
       });
       setPortfolioData([...portfolioData, response.data.investment]);
       setUserData({ ...userData, total: response.data.total });
@@ -521,7 +525,10 @@ const Page = () => {
               type="number"
               placeholder="Enter amount"
               className="w-full p-2 border rounded mb-4"
-              onChange={(e) => (investModal.amount = e.target.value)}
+              value={investModal.amount || ""}
+              onChange={(e) =>
+                setInvestModal({ ...investModal, amount: e.target.value })
+              }
             />
             <div className="flex justify-end space-x-2">
               <button
@@ -531,7 +538,7 @@ const Page = () => {
                 Cancel
               </button>
               <button
-                onClick={() => confirmInvest(investModal.amount || "")}
+                onClick={confirmInvest}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
                 Confirm
