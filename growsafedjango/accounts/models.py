@@ -6,6 +6,7 @@ from uuid import uuid4
 
 class Investment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='investments')
+    option = models.ForeignKey(InvestmentOption, on_delete=models.CASCADE, related_name='investments', null=True)
     name = models.CharField(max_length=50)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     daily_return_rate = models.DecimalField(max_digits=5, decimal_places=4)  # e.g., 0.05 for 5%
