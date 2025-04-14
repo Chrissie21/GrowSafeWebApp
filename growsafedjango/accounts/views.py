@@ -393,9 +393,7 @@ def check_transaction_status(request, transaction_id):
 @permission_classes([IsAuthenticated])
 def account_activity(request):
     try:
-        print("Fetching activities for user:", request.user.username)  # Debug log
         activities = AccountActivity.objects.filter(user=request.user).order_by('-timestamp')[:10]
-        print(f"Found {len(activities)} activities")  # Debug log
         response_data = [
             {
                 'id': activity.id,
@@ -406,10 +404,8 @@ def account_activity(request):
             }
             for activity in activities
         ]
-        print("Response data:", response_data)  # Debug log
         return Response(response_data, status=status.HTTP_200_OK)
     except AccountActivity.DoesNotExist:
-        print("No activities found for user:", request.user.username)
         return Response([], status=status.HTTP_200_OK)  # Return empty list if none exist
     except Exception as e:
         print("Error in account_activity view:", str(e))
