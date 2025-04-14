@@ -4,6 +4,21 @@ from decimal import Decimal
 import uuid
 from uuid import uuid4
 
+class InvestmentOption(models.Model):
+    name = models.CharField(max_length=50)
+    min_investment = models.DecimalField(max_digits=15, decimal_places=2)
+    expected_return = models.DecimalField(max_digits=5, decimal_places=2)
+    risk_level = models.CharField(max_length=20, choices=[
+        ('LOW', 'Low'),
+        ('MEDIUM', 'Medium'),
+        ('HIGH', 'High')
+    ])
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Investment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='investments')
     option = models.ForeignKey(InvestmentOption, on_delete=models.CASCADE, related_name='investments', null=True)
@@ -83,18 +98,3 @@ class AccountActivity(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.action} at {self.timestamp}"
-
-
-class InvestmentOption(models.Model):
-    name = models.CharField(max_length=50)
-    min_investment = models.DecimalField(max_digits=15, decimal_places=2)
-    expected_return = models.DecimalField(max_digits=5, decimal_places=2)
-    risk_level = models.CharField(max_length=20, choices=[
-        ('LOW', 'Low'),
-        ('MEDIUM', 'Medium'),
-        ('HIGH', 'High')
-    ])
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
