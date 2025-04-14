@@ -492,3 +492,25 @@ def change_password(request):
             {"error": f"Failed to change password: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def sell(request):
+    investment_id = request.data.get('investment_id')
+    try:
+        investment = Investment.objects.get(id=investment_id, user=request.user)
+        profile = request.user.profile
+        with transaction.atomic():
+            profile.total += investment.amount
+            investment.delete()
+            profile.save()
+        return Response(
+            {
+                'message': 'Investment sold',
+                'total': str(profile.total),
+            },
+            status=status.HTTP_200_OK
+        )
+    except Investment.DoesNotExist:
+        return Response({'error': 'Investment not found'}, status=status.HTTP_404_NOT_FOUND)
