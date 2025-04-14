@@ -403,8 +403,8 @@ def account_activity(request):
                 'id': activity.id,
                 'date': activity.timestamp.isoformat(),
                 'action': activity.action,
-                'ip': activity.ip_address,
-                'device': activity.device,
+                'ip': activity.ip_address or 'Unknown',
+                'device': activity.device or 'Unknown',
             }
             for activity in activities
         ]
