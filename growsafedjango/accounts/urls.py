@@ -10,6 +10,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('deposit/', views.deposit, name='deposit'),
     path('withdraw/', views.withdraw, name='withdraw'),
+    path('sell/', views.sell, name='sell'),
     path('invest/', views.invest, name='invest'),
     path('token/refresh/', views.refresh_token, name='token_refresh'),
     path('account-activity/', views.account_activity, name='account_activity'),
