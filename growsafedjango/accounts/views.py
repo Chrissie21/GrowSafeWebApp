@@ -10,7 +10,7 @@ from .models import UserProfile, Investment, Transaction
 from decimal import Decimal
 from django.db import transaction
 import traceback
-from .models import UserProfile, AccountActivity
+from .models import UserProfile, AccountActivity, InvestmentOption
 from django.contrib.auth import update_session_auth_hash
 
 # Root endpoint
@@ -462,5 +462,29 @@ def change_password(request):
         traceback.print_exc()
         return Response(
             {"error": f"Failed to change password: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def available_investments(request):
+    try:
+        options = InvestmentOption.objects.all()
+        response_data = [
+            {
+                'id': option.id,
+                'name': option.name,
+                'min_investment': str(option.min_investment),
+                'expected_return': str(option.expected_return),
+                'risk_level': option.risk_level
+            }
+            for option in options
+        ]
+        return Response(response_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(f"Error in available_investments: {str(e)}")
+        return Response(
+            {"error": f"Failed to fetch investment options: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
