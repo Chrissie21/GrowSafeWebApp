@@ -400,7 +400,7 @@ const Account = () => {
                     value={userData.firstName}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 ${
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-black ${
                       !isEditing ? "bg-gray-100" : ""
                     }`}
                   />
@@ -415,7 +415,7 @@ const Account = () => {
                     value={userData.lastName}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 ${
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-black ${
                       !isEditing ? "bg-gray-100" : ""
                     }`}
                   />
@@ -430,7 +430,7 @@ const Account = () => {
                     value={userData.email}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 ${
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-black ${
                       !isEditing ? "bg-gray-100" : ""
                     }`}
                   />
@@ -445,7 +445,7 @@ const Account = () => {
                     value={userData.phone}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 ${
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-black ${
                       !isEditing ? "bg-gray-100" : ""
                     }`}
                   />
@@ -460,7 +460,7 @@ const Account = () => {
                     value={userData.address}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 ${
+                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-black ${
                       !isEditing ? "bg-gray-100" : ""
                     }`}
                   />
@@ -484,7 +484,7 @@ const Account = () => {
                         : ""
                     }
                     disabled
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 text-black"
                   />
                 </div>
               </div>
