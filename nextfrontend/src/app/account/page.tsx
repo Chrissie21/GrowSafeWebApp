@@ -31,6 +31,19 @@ const Account = () => {
   const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordModal, setPasswordModal] = useState<{
+    open: boolean;
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }>({
+    open: false,
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   const [userData, setUserData] = useState<UserData>({
     firstName: "",
@@ -43,14 +56,12 @@ const Account = () => {
 
   const [accountActivity, setAccountActivity] = useState<AccountActivity[]>([]);
   const [activeTab, setActiveTab] = useState<"profile" | "activity">("profile");
-  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const profileResponse = await api.get("profile/");
-        console.log("Profile response:", profileResponse.data);
         setUserData({
           firstName: profileResponse.data.first_name || "",
           lastName: profileResponse.data.last_name || "",
@@ -61,24 +72,19 @@ const Account = () => {
         });
 
         const activityResponse = await api.get("account-activity/");
-        console.log("Activity response:", activityResponse.data);
         setAccountActivity(activityResponse.data);
-
-        setLoading(false);
       } catch (err: unknown) {
         console.error("Fetch error:", err);
         if (err instanceof AxiosError) {
-          console.error("Error response:", err.response?.data);
-          console.error("Error status:", err.response?.status);
+          setError("Failed to load account data. Please try again.");
+          if (err.response?.status === 401) {
+            router.push("/auth/login");
+          }
         }
-        setError("Failed to load account data. Please try again.");
+      } finally {
         setLoading(false);
-        if (err instanceof AxiosError && err.response?.status === 401) {
-          router.push("/auth/login");
-        }
       }
     };
-
     fetchData();
   }, [router]);
 
@@ -98,8 +104,7 @@ const Account = () => {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       router.push("/auth/login");
-    } catch (err: unknown) {
-      console.error("Logout error:", err);
+    } catch (err) {
       router.push("/auth/login");
     }
   };
@@ -116,7 +121,6 @@ const Account = () => {
       setIsEditing(false);
       alert("Profile updated successfully");
     } catch (err: unknown) {
-      console.error("Save profile error:", err);
       alert(
         err instanceof AxiosError && err.response?.data?.error
           ? `Failed to update profile: ${err.response.data.error}`
@@ -131,28 +135,39 @@ const Account = () => {
   };
 
   const handleChangePassword = async () => {
-    const currentPassword = prompt("Enter current password:");
-    const newPassword = prompt("Enter new password:");
-    const confirmPassword = prompt("Confirm new password:");
-
-    if (newPassword !== confirmPassword) {
+    if (
+      !passwordModal.currentPassword ||
+      !passwordModal.newPassword ||
+      !passwordModal.confirmPassword
+    ) {
+      alert("Please fill in all password fields");
+      return;
+    }
+    if (passwordModal.newPassword !== passwordModal.confirmPassword) {
       alert("New passwords do not match");
       return;
     }
-
     try {
+      setIsChangingPassword(true);
       await api.post("change-password/", {
-        current_password: currentPassword,
-        new_password: newPassword,
+        current_password: passwordModal.currentPassword,
+        new_password: passwordModal.newPassword,
+      });
+      setPasswordModal({
+        open: false,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
       });
       alert("Password changed successfully");
     } catch (err: unknown) {
-      console.error("Change password error:", err);
       alert(
         err instanceof AxiosError && err.response?.data?.error
           ? `Failed to change password: ${err.response.data.error}`
           : "Failed to change password: Unknown error",
       );
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -162,7 +177,24 @@ const Account = () => {
     { name: "Account", path: "/account" },
   ];
 
+  const buttonVariants = {
+    hover: { scale: 1.05 },
+    tap: { scale: 0.95 },
+  };
+
   if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1 }}
+          className="h-8 w-8 border-4 border-green-600 border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <motion.div
         className="min-h-screen flex items-center justify-center"
@@ -170,24 +202,15 @@ const Account = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1 }}
-          className="h-8 w-8 border-4 border-green-600 border-t-transparent rounded-full"
-        />
-      </motion.div>
-    );
-  }
-
-  if (error) {
-    return (
-      <motion.div
-        className="min-h-screen flex items-center justify-center text-red-600"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        {error}
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-md">
+          <span className="block sm:inline">{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="absolute top-0 right-0 px-2 py-1 text-red-700 hover:text-red-900"
+          >
+            ✕
+          </button>
+        </div>
       </motion.div>
     );
   }
@@ -348,33 +371,37 @@ const Account = () => {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-gray-800">Account Settings</h1>
-          <p className="text-gray-600 mt-1">
-            Manage your profile and account preferences
+          <p className="text-gray-600 mt-2 text-base">
+            Manage your profile, security settings, and account activity
           </p>
         </motion.div>
 
         <div className="mb-6 border-b border-gray-200">
           <nav className="flex space-x-8">
-            <button
+            <motion.button
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === "profile"
                   ? "border-green-600 text-green-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
               onClick={() => setActiveTab("profile")}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               Profile
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === "activity"
                   ? "border-green-600 text-green-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
               onClick={() => setActiveTab("activity")}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               Account Activity
-            </button>
+            </motion.button>
           </nav>
         </div>
 
@@ -389,39 +416,48 @@ const Account = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="bg-white rounded-lg shadow p-6"
+              className="bg-white rounded-lg shadow-lg p-6"
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-800">
                   Profile Details
                 </h2>
                 {!isEditing ? (
-                  <button
+                  <motion.button
                     onClick={() => setIsEditing(true)}
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                   >
                     Edit Profile
-                  </button>
+                  </motion.button>
                 ) : (
                   <div className="space-x-2">
-                    <button
+                    <motion.button
                       onClick={handleSaveProfile}
-                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                      variants={buttonVariants}
+                      whileHover="hover"
+                      whileTap="tap"
                     >
                       Save
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                       onClick={() => setIsEditing(false)}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-sm"
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                      variants={buttonVariants}
+                      whileHover="hover"
+                      whileTap="tap"
                     >
                       Cancel
-                    </button>
+                    </motion.button>
                   </div>
                 )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     First Name
                   </label>
                   <input
@@ -430,13 +466,13 @@ const Account = () => {
                     value={userData.firstName}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-black ${
-                      !isEditing ? "bg-gray-100" : ""
+                    className={`w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-gray-900 ${
+                      !isEditing ? "bg-gray-100" : "bg-white"
                     }`}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Last Name
                   </label>
                   <input
@@ -445,13 +481,13 @@ const Account = () => {
                     value={userData.lastName}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-black ${
-                      !isEditing ? "bg-gray-100" : ""
+                    className={`w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-gray-900 ${
+                      !isEditing ? "bg-gray-100" : "bg-white"
                     }`}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email
                   </label>
                   <input
@@ -460,13 +496,13 @@ const Account = () => {
                     value={userData.email}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-black ${
-                      !isEditing ? "bg-gray-100" : ""
+                    className={`w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-gray-900 ${
+                      !isEditing ? "bg-gray-100" : "bg-white"
                     }`}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Phone
                   </label>
                   <input
@@ -475,13 +511,13 @@ const Account = () => {
                     value={userData.phone}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-black ${
-                      !isEditing ? "bg-gray-100" : ""
+                    className={`w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-gray-900 ${
+                      !isEditing ? "bg-gray-100" : "bg-white"
                     }`}
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Address
                   </label>
                   <input
@@ -490,13 +526,13 @@ const Account = () => {
                     value={userData.address}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-black ${
-                      !isEditing ? "bg-gray-100" : ""
+                    className={`w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-gray-900 ${
+                      !isEditing ? "bg-gray-100" : "bg-white"
                     }`}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Joined Date
                   </label>
                   <input
@@ -514,7 +550,7 @@ const Account = () => {
                         : ""
                     }
                     disabled
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 text-black"
+                    className="w-full p-2.5 border rounded-lg shadow-sm bg-gray-100 text-gray-900"
                   />
                 </div>
               </div>
@@ -522,12 +558,22 @@ const Account = () => {
                 <h3 className="text-lg font-medium text-gray-800 mb-4">
                   Security
                 </h3>
-                <button
-                  onClick={handleChangePassword}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+                <motion.button
+                  onClick={() =>
+                    setPasswordModal({
+                      open: true,
+                      currentPassword: "",
+                      newPassword: "",
+                      confirmPassword: "",
+                    })
+                  }
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
                 >
                   Change Password
-                </button>
+                </motion.button>
               </div>
             </motion.div>
           )}
@@ -537,7 +583,7 @@ const Account = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="bg-white rounded-lg shadow"
+              className="bg-white rounded-lg shadow-lg"
             >
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-xl font-bold text-gray-800">
@@ -600,6 +646,106 @@ const Account = () => {
           )}
         </motion.div>
       </main>
+
+      {/* Password Change Modal */}
+      <AnimatePresence>
+        {passwordModal.open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-lg p-6 w-full max-w-md"
+            >
+              <h2 className="text-xl font-bold text-gray-800 mb-4">
+                Change Password
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordModal.currentPassword}
+                    onChange={(e) =>
+                      setPasswordModal({
+                        ...passwordModal,
+                        currentPassword: e.target.value,
+                      })
+                    }
+                    disabled={isChangingPassword}
+                    className="w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordModal.newPassword}
+                    onChange={(e) =>
+                      setPasswordModal({
+                        ...passwordModal,
+                        newPassword: e.target.value,
+                      })
+                    }
+                    disabled={isChangingPassword}
+                    className="w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordModal.confirmPassword}
+                    onChange={(e) =>
+                      setPasswordModal({
+                        ...passwordModal,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                    disabled={isChangingPassword}
+                    className="w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2 mt-6">
+                <motion.button
+                  onClick={() =>
+                    setPasswordModal({ ...passwordModal, open: false })
+                  }
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  disabled={isChangingPassword}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  onClick={handleChangePassword}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:bg-gray-400"
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  disabled={isChangingPassword}
+                >
+                  {isChangingPassword ? "Changing..." : "Confirm"}
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <footer className="bg-green-800 text-white py-6">
         <div className="container mx-auto px-4 text-center">
