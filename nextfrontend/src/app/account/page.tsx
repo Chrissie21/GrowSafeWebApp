@@ -5,6 +5,7 @@ import Head from "next/head";
 import { useRouter, usePathname } from "next/navigation";
 import api from "../../lib/api";
 import { AxiosError } from "axios";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface UserData {
   firstName: string;
@@ -163,17 +164,31 @@ const Account = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
-      </div>
+      <motion.div
+        className="min-h-screen flex items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1 }}
+          className="h-8 w-8 border-4 border-green-600 border-t-transparent rounded-full"
+        />
+      </motion.div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-600">
+      <motion.div
+        className="min-h-screen flex items-center justify-center text-red-600"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         {error}
-      </div>
+      </motion.div>
     );
   }
 
@@ -326,12 +341,17 @@ const Account = () => {
       </header>
 
       <main className="flex-grow container mx-auto px-4 py-8 mt-20">
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
           <h1 className="text-3xl font-bold text-gray-800">Account Settings</h1>
           <p className="text-gray-600 mt-1">
             Manage your profile and account preferences
           </p>
-        </div>
+        </motion.div>
 
         <div className="mb-6 border-b border-gray-200">
           <nav className="flex space-x-8">
@@ -358,9 +378,19 @@ const Account = () => {
           </nav>
         </div>
 
-        <div className="mb-12">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mb-12"
+        >
           {activeTab === "profile" && (
-            <div className="bg-white rounded-lg shadow p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-lg shadow p-6"
+            >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-800">
                   Profile Details
@@ -499,11 +529,16 @@ const Account = () => {
                   Change Password
                 </button>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {activeTab === "activity" && (
-            <div className="bg-white rounded-lg shadow">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-lg shadow"
+            >
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-xl font-bold text-gray-800">
                   Account Activity
@@ -530,7 +565,12 @@ const Account = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {accountActivity.map((activity) => (
-                        <tr key={activity.id}>
+                        <motion.tr
+                          key={activity.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {new Date(activity.date).toLocaleDateString(
                               "en-US",
@@ -550,15 +590,15 @@ const Account = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {activity.device}
                           </td>
-                        </tr>
+                        </motion.tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </main>
 
       <footer className="bg-green-800 text-white py-6">
