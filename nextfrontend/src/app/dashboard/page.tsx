@@ -5,7 +5,7 @@ import Head from "next/head";
 import { useRouter, usePathname } from "next/navigation";
 import api from "../../lib/api";
 import { AxiosError } from "axios";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion"; // Add AnimatePresence for modal
 
 interface ApiErrorResponse {
   error?: string;
@@ -18,6 +18,9 @@ const Dashboard = () => {
   const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false); // State for modal
+  const [depositAmount, setDepositAmount] = useState(""); // State for deposit input
+  const [depositError, setDepositError] = useState<string | null>(null); // State for deposit error
 
   const [userData, setUserData] = useState<{
     firstName: string;
@@ -190,6 +193,84 @@ const Dashboard = () => {
     } catch (err) {
       console.error("Logout failed:", err);
       router.push("/auth/login");
+    }
+  };
+
+  // Handle deposit submission
+  const handleDeposit = async () => {
+    if (
+      !depositAmount ||
+      isNaN(Number(depositAmount)) ||
+      Number(depositAmount) <= 0
+    ) {
+      setDepositError("Please enter a valid amount");
+      return;
+    }
+
+    try {
+      const response = await api.post("deposit/", {
+        amount: depositAmount,
+        mobile_number: userData.mobile_number || "1234567890",
+      });
+      alert(`Deposit request submitted: ${response.data.message}`);
+      setIsDepositModalOpen(false);
+      setDepositAmount("");
+      setDepositError(null);
+
+      // Refresh data
+      const profileResponse = await api.get("profile/");
+      const data = profileResponse.data;
+      setUserData({
+        firstName: data.first_name || data.username,
+        lastName: data.last_name || "",
+        email: data.email,
+        accountBalance: parseFloat(data.total) || 0,
+        investmentsValue:
+          data.investments.reduce(
+            (sum: number, inv: { amount: string }) =>
+              sum + parseFloat(inv.amount),
+            0,
+          ) || 0,
+        availableCash: parseFloat(data.total) || 0,
+        mobile_number: data.mobile_number || "",
+      });
+      setPortfolioData(
+        data.investments.map(
+          (
+            inv: { name: string; amount: string; daily_return_rate: string },
+            index: number,
+          ) => ({
+            id: index + 1,
+            name: inv.name,
+            allocation: calculateAllocation(inv.amount, data.investments),
+            value: parseFloat(inv.amount),
+            change: parseFloat(inv.daily_return_rate) * 100,
+          }),
+        ),
+      );
+      setRecentTransactions(
+        data.transactions.map(
+          (
+            tx: {
+              type: string;
+              amount: string;
+              status: string;
+              created_at: string;
+              notes: string;
+            },
+            index: number,
+          ) => ({
+            id: index + 1,
+            date: new Date(tx.created_at).toISOString().split("T")[0],
+            type: tx.type,
+            investment: tx.notes || "Cash",
+            amount: parseFloat(tx.amount),
+            status: tx.status,
+          }),
+        ),
+      );
+    } catch (err: AxiosError<ApiErrorResponse>) {
+      setDepositError(err.response?.data?.error || "Deposit failed");
     }
   };
 
@@ -431,92 +512,74 @@ const Dashboard = () => {
               })}
             </p>
             <button
-              onClick={async () => {
-                const amount = prompt("Enter deposit amount:");
-                if (amount && !isNaN(Number(amount)) && Number(amount) > 0) {
-                  try {
-                    const response = await api.post("deposit/", {
-                      amount,
-                      mobile_number: userData.mobile_number || "1234567890",
-                    });
-                    alert(
-                      `Deposit request submitted: ${response.data.message}`,
-                    );
-                    const profileResponse = await api.get("profile/");
-                    const data = profileResponse.data;
-                    setUserData({
-                      firstName: data.first_name || data.username,
-                      lastName: data.last_name || "",
-                      email: data.email,
-                      accountBalance: parseFloat(data.total) || 0,
-                      investmentsValue:
-                        data.investments.reduce(
-                          (sum: number, inv: { amount: string }) =>
-                            sum + parseFloat(inv.amount),
-                          0,
-                        ) || 0,
-                      availableCash: parseFloat(data.total) || 0,
-                      mobile_number: data.mobile_number || "",
-                    });
-                    setPortfolioData(
-                      data.investments.map(
-                        (
-                          inv: {
-                            name: string;
-                            amount: string;
-                            daily_return_rate: string;
-                          },
-                          index: number,
-                        ) => ({
-                          id: index + 1,
-                          name: inv.name,
-                          allocation: calculateAllocation(
-                            inv.amount,
-                            data.investments,
-                          ),
-                          value: parseFloat(inv.amount),
-                          change: parseFloat(inv.daily_return_rate) * 100,
-                        }),
-                      ),
-                    );
-                    setRecentTransactions(
-                      data.transactions.map(
-                        (
-                          tx: {
-                            type: string;
-                            amount: string;
-                            status: string;
-                            created_at: string;
-                            notes: string;
-                          },
-                          index: number,
-                        ) => ({
-                          id: index + 1,
-                          date: new Date(tx.created_at)
-                            .toISOString()
-                            .split("T")[0],
-                          type: tx.type,
-                          investment: tx.notes || "Cash",
-                          amount: parseFloat(tx.amount),
-                          status: tx.status,
-                        }),
-                      ),
-                    );
-                  } catch (err: AxiosError<ApiErrorResponse>) {
-                    alert(
-                      `Deposit failed: ${err.response?.data?.error || "Unknown error"}`,
-                    );
-                  }
-                } else {
-                  alert("Please enter a valid amount");
-                }
-              }}
+              onClick={() => setIsDepositModalOpen(true)} // Open modal
               className="mt-3 text-sm px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
             >
               Add Funds
             </button>
           </div>
         </div>
+
+        {/* Deposit Modal */}
+        <AnimatePresence>
+          {isDepositModalOpen && (
+            <motion.div
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div
+                className="bg-white rounded-lg p-6 w-full max-w-md"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  Add Funds
+                </h2>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Amount (Tsh)
+                  </label>
+                  <input
+                    type="number"
+                    value={depositAmount}
+                    onChange={(e) => {
+                      setDepositAmount(e.target.value);
+                      setDepositError(null); // Clear error on input change
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
+                    placeholder="Enter amount"
+                  />
+                  {depositError && (
+                    <p className="text-red-600 text-sm mt-1">{depositError}</p>
+                  )}
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setIsDepositModalOpen(false);
+                      setDepositAmount("");
+                      setDepositError(null);
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeposit}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                  >
+                    Deposit
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="mb-6 border-b border-gray-200">
           <nav className="flex space-x-8">
@@ -965,8 +1028,7 @@ const Dashboard = () => {
       <footer className="bg-green-800 text-white py-6">
         <div className="container mx-auto px-4 text-center">
           <p>
-            &copy; {new Date().getFullYear()} GrowSafe Page. All rights
-            reserved.
+            © {new Date().getFullYear()} GrowSafe Page. All rights reserved.
           </p>
           <div className="mt-2">
             <Link
