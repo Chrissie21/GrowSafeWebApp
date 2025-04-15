@@ -5,6 +5,7 @@ import Head from "next/head";
 import { useRouter, usePathname } from "next/navigation";
 import api from "../../lib/api";
 import { AxiosError } from "axios";
+import { motion } from "framer-motion";
 
 interface ApiErrorResponse {
   error?: string;
@@ -200,17 +201,31 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
-      </div>
+      <motion.div
+        className="min-h-screen flex items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1 }}
+          className="h-8 w-8 border-4 border-green-600 border-t-transparent rounded-full"
+        />
+      </motion.div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-600">
+      <motion.div
+        className="min-h-screen flex items-center justify-center text-red-600"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         {error}
-      </div>
+      </motion.div>
     );
   }
 
@@ -363,14 +378,19 @@ const Dashboard = () => {
       </header>
 
       <main className="flex-grow container mx-auto px-4 py-8 mt-20">
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
           <h1 className="text-3xl font-bold text-gray-800">
             Welcome back, {userData.firstName}
           </h1>
           <p className="text-gray-600 mt-1">
             Here is an overview of your investments
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
@@ -533,10 +553,20 @@ const Dashboard = () => {
           </nav>
         </div>
 
-        <div className="mb-12">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mb-12"
+        >
           {activeTab === "overview" && (
             <div>
-              <div className="bg-white rounded-lg shadow mb-8">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-lg shadow mb-8"
+              >
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-xl font-bold text-gray-800">
                     Portfolio Allocation
@@ -563,7 +593,12 @@ const Dashboard = () => {
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {portfolioData.map((item) => (
-                          <tr key={item.id}>
+                          <motion.tr
+                            key={item.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                          >
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {item.name}
                             </td>
@@ -587,15 +622,20 @@ const Dashboard = () => {
                               {item.change >= 0 ? "+" : ""}
                               {item.change}%
                             </td>
-                          </tr>
+                          </motion.tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="bg-white rounded-lg shadow">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-lg shadow"
+              >
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-xl font-bold text-gray-800">
                     Market News
@@ -603,8 +643,11 @@ const Dashboard = () => {
                 </div>
                 <div className="divide-y divide-gray-200">
                   {marketNews.map((news) => (
-                    <div
+                    <motion.div
                       key={news.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
                       className="p-6 hover:bg-gray-50 transition-colors"
                     >
                       <h3 className="text-lg font-medium text-gray-900 mb-1">
@@ -621,7 +664,7 @@ const Dashboard = () => {
                           })}
                         </span>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
                 <div className="p-4 border-t border-gray-200 text-center">
@@ -629,12 +672,17 @@ const Dashboard = () => {
                     View All News
                   </button>
                 </div>
-              </div>
+              </motion.div>
             </div>
           )}
 
           {activeTab === "portfolio" && (
-            <div className="bg-white rounded-lg shadow">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-lg shadow"
+            >
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-xl font-bold text-gray-800">Your Page</h2>
               </div>
@@ -662,7 +710,12 @@ const Dashboard = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {portfolioData.map((item) => (
-                        <tr key={item.id}>
+                        <motion.tr
+                          key={item.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {item.name}
                           </td>
@@ -806,17 +859,22 @@ const Dashboard = () => {
                               </button>
                             </div>
                           </td>
-                        </tr>
+                        </motion.tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {activeTab === "transactions" && (
-            <div className="bg-white rounded-lg shadow">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-lg shadow"
+            >
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-xl font-bold text-gray-800">
                   Recent Transactions
@@ -846,7 +904,12 @@ const Dashboard = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {recentTransactions.map((transaction) => (
-                        <tr key={transaction.id}>
+                        <motion.tr
+                          key={transaction.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {new Date(transaction.date).toLocaleDateString(
                               "en-US",
@@ -883,7 +946,7 @@ const Dashboard = () => {
                               {transaction.status}
                             </span>
                           </td>
-                        </tr>
+                        </motion.tr>
                       ))}
                     </tbody>
                   </table>
@@ -894,9 +957,9 @@ const Dashboard = () => {
                   View All Transactions
                 </button>
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </main>
 
       <footer className="bg-green-800 text-white py-6">
