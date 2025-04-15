@@ -466,8 +466,8 @@ const Account = () => {
                     value={userData.firstName}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-gray-900 ${
-                      !isEditing ? "bg-gray-100" : "bg-white"
+                    className={`w-full p-3 border-1 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors text-gray-900 ${
+                      !isEditing ? "bg-gray-50" : "bg-white"
                     }`}
                   />
                 </div>
@@ -481,8 +481,8 @@ const Account = () => {
                     value={userData.lastName}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-gray-900 ${
-                      !isEditing ? "bg-gray-100" : "bg-white"
+                    className={`w-full p-3 border-1 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors text-gray-900 ${
+                      !isEditing ? "bg-gray-50" : "bg-white"
                     }`}
                   />
                 </div>
@@ -496,8 +496,8 @@ const Account = () => {
                     value={userData.email}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-gray-900 ${
-                      !isEditing ? "bg-gray-100" : "bg-white"
+                    className={`w-full p-3 border-1 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors text-gray-900 ${
+                      !isEditing ? "bg-gray-50" : "bg-white"
                     }`}
                   />
                 </div>
@@ -511,8 +511,8 @@ const Account = () => {
                     value={userData.phone}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-gray-900 ${
-                      !isEditing ? "bg-gray-100" : "bg-white"
+                    className={`w-full p-3 border-1 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors text-gray-900 ${
+                      !isEditing ? "bg-gray-50" : "bg-white"
                     }`}
                   />
                 </div>
@@ -526,8 +526,8 @@ const Account = () => {
                     value={userData.address}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-gray-900 ${
-                      !isEditing ? "bg-gray-100" : "bg-white"
+                    className={`w-full p-3 border-1 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors text-gray-900 ${
+                      !isEditing ? "bg-gray-50" : "bg-white"
                     }`}
                   />
                 </div>
@@ -550,7 +550,7 @@ const Account = () => {
                         : ""
                     }
                     disabled
-                    className="w-full p-2.5 border rounded-lg shadow-sm bg-gray-100 text-gray-900"
+                    className="w-full p-3 border-1 border-gray-200 rounded-lg shadow-sm bg-gray-50 text-gray-900"
                   />
                 </div>
               </div>
@@ -680,7 +680,7 @@ const Account = () => {
                       })
                     }
                     disabled={isChangingPassword}
-                    className="w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    className="w-full p-3 border-1 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors text-gray-900 bg-white"
                   />
                 </div>
                 <div>
@@ -697,7 +697,7 @@ const Account = () => {
                       })
                     }
                     disabled={isChangingPassword}
-                    className="w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    className="w-full p-3 border-1 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors text-gray-900 bg-white"
                   />
                 </div>
                 <div>
@@ -714,7 +714,7 @@ const Account = () => {
                       })
                     }
                     disabled={isChangingPassword}
-                    className="w-full p-2.5 border rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    className="w-full p-3 border-1 border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors text-gray-900 bg-white"
                   />
                 </div>
               </div>
