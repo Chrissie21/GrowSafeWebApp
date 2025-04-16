@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import UserProfile, Investment, Transaction, InvestmentOption
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
+from .models import UserProfile, Investment, Transaction, InvestmentOption, TransactionStatusHistory, AccountActivity
 
 
 # Inline user profile for User Admin
@@ -9,6 +11,14 @@ class UserProfileInline(admin.StackedInline):
     verbose_name_plural = 'Profile'
     fields = ('total', 'total_deposit', 'total_withdraw', 'daily_earnings', 'mobile_number', 'address')
     readonly_fields = ('daily_earnings',)
+
+# Extended UserAdmin to include userProfile
+class UserAdmin(BaseUserAdmin):
+    inlines = (UserProfileInline,)
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_total_balance')
+    list_filter = ('is_staff', 'is_superuser')
+    search_fields = ('username', 'email', 'first_name', 'last_name')
+
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
