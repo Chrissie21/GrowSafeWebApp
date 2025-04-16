@@ -94,3 +94,11 @@ class InvestmentOptionAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     ordering = ('-created_at',)
 
+# Register TransactionStatusHistory
+@admin.register(TransactionStatusHistory)
+class TransactionStatusHistoryAdmin(admin.ModelAdmin):
+    list_display = ('transaction', 'status', 'changed_at', 'changed_by')
+    list_filter = ('status',)
+    search_fields = ('transaction__transaction_id', 'changed_by__username')
+    raw_id_fields = ('transaction', 'changed_by')
+    ordering = ('-changed_at',)
