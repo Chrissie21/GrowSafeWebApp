@@ -6,11 +6,12 @@ UserModel = get_user_model()
 class EmailOrUsernameModelBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         try:
-            # Try getting user by username or EmailOrUsernameModelBackend
+            # Try getting user by username
             user = UserModel.objects.get(username=username)
         except UserModel.DoesNotExist:
             try:
-                user = UserModel.odjects.get(email=username)
+                # Try getting user by email
+                user = UserModel.objects.get(email=username)
             except UserModel.DoesNotExist:
                 return None
 
