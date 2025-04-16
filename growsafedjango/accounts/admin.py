@@ -102,3 +102,16 @@ class TransactionStatusHistoryAdmin(admin.ModelAdmin):
     search_fields = ('transaction__transaction_id', 'changed_by__username')
     raw_id_fields = ('transaction', 'changed_by')
     ordering = ('-changed_at',)
+
+# Register AccountActivity
+@admin.register(AccountActivity)
+class AccountActivityAdmin(admin.ModelAdmin):
+    list_display = ('user', 'action', 'ip_address', 'device', 'timestamp')
+    list_filter = ('action',)
+    search_fields = ('user__username', 'ip_address', 'device')
+    raw_id_fields = ('user',)
+    ordering = ('-timestamp',)
+
+# Re-register User with custom UserAdmin
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
