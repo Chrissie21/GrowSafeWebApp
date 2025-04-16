@@ -631,7 +631,7 @@ const Page = () => {
               <input
                 type="number"
                 placeholder="Enter amount"
-                className="w-full p-2 border rounded mb-4"
+                className="w-full p-2 border rounded mb-4 text-black"
                 value={investModal.amount || ""}
                 onChange={(e) =>
                   setInvestModal({ ...investModal, amount: e.target.value })
