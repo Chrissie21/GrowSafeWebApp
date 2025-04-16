@@ -1,6 +1,15 @@
 from django.contrib import admin
 from .models import UserProfile, Investment, Transaction, InvestmentOption
 
+
+# Inline user profile for User Admin
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = 'Profile'
+    fields = ('total', 'total_deposit', 'total_withdraw', 'daily_earnings', 'mobile_number', 'address')
+    readonly_fields = ('daily_earnings',)
+
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'total', 'total_deposit', 'total_withdraw', 'daily_earnings', 'mobile_number')
