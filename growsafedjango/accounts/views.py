@@ -12,6 +12,8 @@ from django.db import transaction
 import traceback
 from .models import UserProfile, AccountActivity, InvestmentOption
 from django.contrib.auth import update_session_auth_hash
+from django.shortcuts import render
+
 
 # Root endpoint
 def auth_root(request):
@@ -514,3 +516,8 @@ def sell(request):
         )
     except Investment.DoesNotExist:
         return Response({'error': 'Investment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+def homepage(request):
+    return render(request, 'homepage.html', {'site_name': 'GrowSafe Investments'})
