@@ -25,6 +25,7 @@ class UserProfileInline(admin.StackedInline):
     readonly_fields = ('daily_earnings',)
 
 # Extend UserAdmin to include UserProfile
+# In growsafedjango/accounts/admin.py
 class UserAdmin(BaseUserAdmin):
     inlines = (UserProfileInline,)
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_total_balance')
@@ -32,7 +33,10 @@ class UserAdmin(BaseUserAdmin):
     search_fields = ('username', 'email', 'first_name', 'last_name')
 
     def get_total_balance(self, obj):
-        return obj.profile.total if hasattr(obj, 'profile') else 0.00
+        try:
+            return obj.profile.total if hasattr(obj, 'profile') else 0.00
+        except UserProfile.DoesNotExist:
+            return 0.00
     get_total_balance.short_description = 'Total Balance'
 
 # Register UserProfile
