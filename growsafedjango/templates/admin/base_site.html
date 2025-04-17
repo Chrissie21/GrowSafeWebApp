@@ -6,6 +6,7 @@ GrowSafe Investments Admin{% endblock %} {% block branding %}
             src="{% static 'admin/images/logo.png' %}"
             alt="GrowSafe Investments"
             style="height: 40px; vertical-align: middle"
+            onerror="this.style.display='none';"
         />
         GrowSafe Investments Admin
     </a>
@@ -16,13 +17,10 @@ GrowSafe Investments Admin{% endblock %} {% block branding %}
     type="text/css"
     href="{% static 'admin/css/custom_admin.css' %}"
 />
-{% endblock %} {% block extrahead %}
-<script src="{% static 'admin/js/custom_admin.js' %}"></script>
-{% endblock %} {% block extrahead %}
 <link
-    rel="icon"
-    type="image/png"
-    href="{% static 'admin/images/favicon.png' %}"
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
 />
+{% endblock %} {% block extrahead %}
 <script src="{% static 'admin/js/custom_admin.js' %}"></script>
 {% endblock %}
