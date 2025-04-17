@@ -114,7 +114,7 @@ class TransactionStatusHistoryAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     search_fields = ('transaction__transaction_id', 'changed_by__username')
     raw_id_fields = ('transaction', 'changed_by')
-    ordering = ('-created_at',)
+    ordering = ('-changed_at',)
 
 # Register AccountActivity
 @admin.register(AccountActivity)
