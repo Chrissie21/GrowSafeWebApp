@@ -25,7 +25,6 @@ class UserProfileInline(admin.StackedInline):
     readonly_fields = ('daily_earnings',)
 
 # Extend UserAdmin to include UserProfile
-# In growsafedjango/accounts/admin.py
 class UserAdmin(BaseUserAdmin):
     inlines = (UserProfileInline,)
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_total_balance')
