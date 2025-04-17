@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from .models import UserProfile, Investment, Transaction, InvestmentOption, TransactionStatusHistory, AccountActivity
 
+# Custom Admin Site for Dashboard Metrics
 class CustomAdminSite(admin.AdminSite):
     def each_context(self, request):
         context = super().each_context(request)
@@ -12,8 +13,8 @@ class CustomAdminSite(admin.AdminSite):
         context['active_options'] = InvestmentOption.objects.count()
         return context
 
+# Replace the default admin site
 admin.site = CustomAdminSite(name='custom_admin')
-
 
 # Inline UserProfile for User admin
 class UserProfileInline(admin.StackedInline):
@@ -113,7 +114,7 @@ class TransactionStatusHistoryAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     search_fields = ('transaction__transaction_id', 'changed_by__username')
     raw_id_fields = ('transaction', 'changed_by')
-    ordering = ('-changed_at',)
+    ordering = ('-created_at',)
 
 # Register AccountActivity
 @admin.register(AccountActivity)
@@ -124,6 +125,5 @@ class AccountActivityAdmin(admin.ModelAdmin):
     raw_id_fields = ('user',)
     ordering = ('-timestamp',)
 
-# Re-register User with custom UserAdmin
-admin.site.unregister(User)
+# Register User with custom UserAdmin (no unregistration needed)
 admin.site.register(User, UserAdmin)
