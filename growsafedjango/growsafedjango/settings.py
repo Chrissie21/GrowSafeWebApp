@@ -60,7 +60,9 @@ ROOT_URLCONF = 'growsafedjango.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            'templates/admin'
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
