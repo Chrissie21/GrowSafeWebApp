@@ -8,6 +8,8 @@ class CustomAdminSite(admin.AdminSite):
         context = super().each_context(request)
         context['total_users'] = User.objects.count()
         context['pending_transactions'] = Transaction.objects.filter(status='PENDING').count()
+        context['total_investments'] = Investment.objects.count()
+        context['active_options'] = InvestmentOption.objects.count()
         return context
 
 admin.site = CustomAdminSite(name='custom_admin')
