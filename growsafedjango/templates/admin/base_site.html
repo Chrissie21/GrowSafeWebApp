@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %} {% load static %} {% block title %}{{ title }} |
+GrowSafe Investments Admin{% endblock %} {% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <img
+            src="{% static 'admin/images/logo.png' %}"
+            alt="GrowSafe Investments"
+            style="height: 40px; vertical-align: middle"
+        />
+        GrowSafe Investments Admin
+    </a>
+</h1>
+{% endblock %} {% block extrastyle %}
+<link
+    rel="stylesheet"
+    type="text/css"
+    href="{% static 'admin/css/custom_admin.css' %}"
+/>
+{% endblock %} {% block extrahead %}
+<script src="{% static 'admin/js/custom_admin.js' %}"></script>
+{% endblock %}

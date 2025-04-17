@@ -10,6 +10,8 @@ class CustomAdminSite(admin.AdminSite):
         context['pending_transactions'] = Transaction.objects.filter(status='PENDING').count()
         return context
 
+admin.site = CustomAdminSite(name='custom_admin')
+
 # Inline UserProfile for User admin
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
