@@ -16,7 +16,7 @@
             <h1>{{ site_name }}</h1>
             <nav>
                 <a href="{% url 'admin:index' %}">Admin Panel</a>
-                <a href="{% url 'api-auth:login' %}">Login</a>
+                <a href="{% url 'login' %}">Login</a>
             </nav>
         </header>
         <main>
@@ -26,11 +26,11 @@
                     Securely grow your wealth with our tailored investment
                     options.
                 </p>
-                <a href="{% url 'api-auth:login' %}" class="btn">Get Started</a>
+                <a href="{% url 'login' %}" class="btn">Get Started</a>
             </section>
         </main>
         <footer>
-            <p>&copy; 2025 GrowSafe Investments. All rights reserved.</p>
+            <p>© 2025 GrowSafe Investments. All rights reserved.</p>
         </footer>
     </body>
 </html>

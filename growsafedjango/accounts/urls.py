@@ -1,11 +1,11 @@
 from django.urls import path
 from . import views
-from rest_framework.urls import login, logout
+from django.contrib.auth.views import LoginView
 
 app_name = 'api-auth'
 
 urlpatterns = [
-    path('login/', login, name = 'login'),
+    path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
     # Client endpoints
     path('', views.auth_root, name='auth_root'),
     path('signup/', views.signup, name='signup'),
