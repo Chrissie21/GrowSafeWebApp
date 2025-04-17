@@ -3,6 +3,13 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 from .models import UserProfile, Investment, Transaction, InvestmentOption, TransactionStatusHistory, AccountActivity
 
+class CustomAdminSite(admin.AdminSite):
+    def each_context(self, request):
+        context = super().each_context(request)
+        context['total_users'] = User.objects.count()
+        context['pending_transactions'] = Transaction.objects.filter(status='PENDING').count()
+        return context
+
 # Inline UserProfile for User admin
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
