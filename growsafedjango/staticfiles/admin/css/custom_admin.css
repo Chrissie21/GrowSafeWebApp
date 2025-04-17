@@ -1,0 +1,115 @@
+/* General Admin Styling */
+body {
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+    background-color: #f7fafc;
+    color: #2d3748;
+}
+
+/* Header */
+#site-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a202c;
+}
+
+#site-name a {
+    color: #1a202c;
+    text-decoration: none;
+}
+
+/* Sidebar */
+#module-list {
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#module-list li {
+    border-bottom: 1px solid #edf2f7;
+}
+
+#module-list a {
+    color: #4a5568;
+    font-weight: 500;
+    padding: 12px 20px;
+    transition:
+        background-color 0.2s,
+        color 0.2s;
+}
+
+#module-list a:hover {
+    background-color: #e2e8f0;
+    color: #2b6cb0;
+}
+
+/* Content Area */
+#content {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    margin: 20px;
+}
+
+/* Tables */
+.object-tools a,
+.action-checkbox-column input {
+    background: #2b6cb0;
+    color: white;
+    border-radius: 4px;
+    padding: 8px 12px;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.object-tools a:hover,
+.action-checkbox-column input:hover {
+    background: #2c5282;
+}
+
+/* Buttons */
+input[type="submit"],
+.button,
+button {
+    background: #2b6cb0;
+    border: none;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+input[type="submit"]:hover,
+.button:hover,
+button:hover {
+    background: #2c5282;
+}
+
+/* Forms */
+.form-row {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    #content {
+        margin: 10px;
+        padding: 16px;
+    }
+    #site-name {
+        font-size: 1.25rem;
+    }
+}
