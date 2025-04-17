@@ -1,0 +1,102 @@
+/* General Styling */
+body {
+    font-family:
+        "Inter",
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f7fafc;
+    color: #2d3748;
+}
+
+/* Header */
+header {
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin: 0;
+}
+
+header nav a {
+    color: #4a5568;
+    text-decoration: none;
+    margin-left: 16px;
+    font-weight: 500;
+}
+
+header nav a:hover {
+    color: #2b6cb0;
+}
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: 64px 32px;
+    background: #ffffff;
+    border-radius: 8px;
+    margin: 32px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.hero h2 {
+    font-size: 2rem;
+    color: #1a202c;
+    margin-bottom: 16px;
+}
+
+.hero p {
+    font-size: 1.1rem;
+    color: #4a5568;
+    margin-bottom: 24px;
+}
+
+.hero .btn {
+    background: #2b6cb0;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.hero .btn:hover {
+    background: #2c5282;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 16px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    color: #4a5568;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 16px;
+    }
+    header nav {
+        display: flex;
+        gap: 16px;
+    }
+    .hero {
+        margin: 16px;
+        padding: 32px 16px;
+    }
+}
