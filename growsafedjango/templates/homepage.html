@@ -1,0 +1,36 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{ site_name }}</title>
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+        />
+        <link rel="stylesheet" href="{% static 'css/homepage.css' %}" />
+    </head>
+    <body>
+        <header>
+            <h1>{{ site_name }}</h1>
+            <nav>
+                <a href="{% url 'admin:index' %}">Admin Panel</a>
+                <a href="{% url 'api-auth:login' %}">Login</a>
+            </nav>
+        </header>
+        <main>
+            <section class="hero">
+                <h2>Welcome to GrowSafe Investments</h2>
+                <p>
+                    Securely grow your wealth with our tailored investment
+                    options.
+                </p>
+                <a href="{% url 'api-auth:login' %}" class="btn">Get Started</a>
+            </section>
+        </main>
+        <footer>
+            <p>&copy; 2025 GrowSafe Investments. All rights reserved.</p>
+        </footer>
+    </body>
+</html>
