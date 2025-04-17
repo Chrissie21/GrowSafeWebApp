@@ -12,16 +12,6 @@ class CustomAdminSite(admin.AdminSite):
 
 admin.site = CustomAdminSite(name='custom_admin')
 
-def get_app_list(self, request):
-    app_list = super().get_app_list(request)
-    total_users = User.objects.count()
-    pending_transactions = Transaction.objects.filter(status='PENDING').count()
-    self.extra_context = {
-        'total_users': total_users,
-        'pending_transactions': pending_transactions
-    }
-    return app_list
-
 
 # Inline UserProfile for User admin
 class UserProfileInline(admin.StackedInline):
