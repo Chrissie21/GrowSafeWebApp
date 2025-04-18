@@ -217,7 +217,7 @@ const SignUp = () => {
                 onChange={handleChange}
                 className={`w-full px-4 py-3 rounded border ${
                   errors.username ? "border-red-500" : "border-gray-300"
-                } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                } focus:outline-none focus:ring-2 focus:ring-green-500 text-black`}
                 placeholder="johndoe123"
               />
               {errors.username && (
@@ -244,7 +244,7 @@ const SignUp = () => {
                   onChange={handleChange}
                   className={`w-full px-4 py-3 rounded border ${
                     errors.firstName ? "border-red-500" : "border-gray-300"
-                  } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                  } focus:outline-none focus:ring-2 focus:ring-green-500 text-black`}
                   placeholder="John"
                 />
                 {errors.firstName && (
@@ -268,7 +268,7 @@ const SignUp = () => {
                   onChange={handleChange}
                   className={`w-full px-4 py-3 rounded border ${
                     errors.lastName ? "border-red-500" : "border-gray-300"
-                  } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                  } focus:outline-none focus:ring-2 focus:ring-green-500 text-black`}
                   placeholder="Doe"
                 />
                 {errors.lastName && (
@@ -292,7 +292,7 @@ const SignUp = () => {
                 onChange={handleChange}
                 className={`w-full px-4 py-3 rounded border ${
                   errors.email ? "border-red-500" : "border-gray-300"
-                } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                } focus:outline-none focus:ring-2 focus:ring-green-500 text-black`}
                 placeholder="you@example.com"
               />
               {errors.email && (
@@ -315,7 +315,7 @@ const SignUp = () => {
                 onChange={handleChange}
                 className={`w-full px-4 py-3 rounded border ${
                   errors.password ? "border-red-500" : "border-gray-300"
-                } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                } focus:outline-none focus:ring-2 focus:ring-green-500 text-black`}
                 placeholder="••••••••"
               />
               {errors.password && (
@@ -341,7 +341,7 @@ const SignUp = () => {
                 onChange={handleChange}
                 className={`w-full px-4 py-3 rounded border ${
                   errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                } focus:outline-none focus:ring-2 focus:ring-green-500 text-black`}
                 placeholder="••••••••"
               />
               {errors.confirmPassword && (

@@ -175,7 +175,7 @@ const Login = () => {
                 onChange={handleChange}
                 className={`w-full px-4 py-3 rounded border ${
                   errors.usernameOrEmail ? "border-red-500" : "border-gray-300"
-                } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                } focus:outline-none focus:ring-2 focus:ring-green-500 text-black`}
                 placeholder="Username or you@example.com"
               />
               {errors.usernameOrEmail && (
@@ -208,7 +208,7 @@ const Login = () => {
                 onChange={handleChange}
                 className={`w-full px-4 py-3 rounded border ${
                   errors.password ? "border-red-500" : "border-gray-300"
-                } focus:outline-none focus:ring-2 focus:ring-green-500`}
+                } focus:outline-none focus:ring-2 focus:ring-green-500 text-black`}
                 placeholder="••••••••"
               />
               {errors.password && (
