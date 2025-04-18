@@ -10,7 +10,7 @@ from .models import UserProfile, Investment, Transaction
 from decimal import Decimal
 from django.db import transaction
 import traceback
-from .models import UserProfile, AccountActivity, InvestmentOption
+from .models import UserProfile, AccountActivity, InvestmentOption, Transaction, Investment
 from django.contrib.auth import update_session_auth_hash
 from django.shortcuts import render
 
@@ -521,3 +521,14 @@ def sell(request):
 
 def homepage(request):
     return render(request, 'homepage.html', {'site_name': 'GrowSafe Investments'})
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_metrics(request):
+    return Response({
+        'total_users': User.objects.count(),
+        'pending_transactions': Transaction.objects.filter(status='PENDING').count(),
+        'total_investments': Investment.objects.count(),
+        'active_options': InvestmentOption.objects.count(),
+    })

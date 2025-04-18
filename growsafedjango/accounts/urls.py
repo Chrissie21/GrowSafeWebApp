@@ -25,4 +25,5 @@ urlpatterns = [
     path('admin/transaction/<int:transaction_id>/approve/', views.admin_approve_transaction, name='admin_approve_transaction'),
     path('admin/transaction/<int:transaction_id>/decline/', views.admin_decline_transaction, name='admin_decline_transaction'),
     path('admin/user/<int:user_id>/mobile/', views.admin_update_mobile, name='admin_update_mobile'),
+    path('admin/metrics/', views.admin_metrics, name='admin_metrics'),
 ]
