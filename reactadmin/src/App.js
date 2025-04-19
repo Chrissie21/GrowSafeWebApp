@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Sidebar from "./components/Sidebar";
-import Login from "./components/Login";
-import AdminPanel from "./components/AdminPanel";
+import Sidebar from "./components /Sidebar";
+import Login from "./components /Login";
+import AdminPanel from "./components /AdminPanel";
 
 const apiBaseUrl = "http://localhost:8000/api/auth/";
 
