@@ -532,3 +532,40 @@ def admin_metrics(request):
         'total_investments': Investment.objects.count(),
         'active_options': InvestmentOption.objects.count(),
     })
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def admin_create_user(request):
+    if not request.user.is_superuser:
+        return Response({'error': 'Only superusers can create users'}, status=status.HTTP_403_FORBIDDEN)
+
+    username = request.data.get('username')
+    email = request.data.get('email')
+    password = request.data.get('password')
+    first_name = request.data.get('first_name', '')
+    last_name = request.data.get('last_name', '')
+    is_staff = request.data.get('is_staff', False)
+
+    if not all([username, email, password]):
+        return Response({'error': 'Username, email, and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if User.objects.filter(username=username).exists():
+        return Response({'error': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if User.objects.filter(email=email).exists():
+        return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_staff=is_staff
+        )
+        UserProfile.objects.get_or_create(user=user)
+        return Response({'message': 'User created successfully', 'user_id': user.id}, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({'error': f'Failed to create user: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
