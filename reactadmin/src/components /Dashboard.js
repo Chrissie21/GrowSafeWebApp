@@ -10,26 +10,25 @@ function Dashboard() {
     total_investments: 0,
     active_options: 0,
   });
+  const [error, setError] = useState("");
 
   useEffect(() => {
     api
       .get("admin/metrics/")
       .then((response) => {
         setMetrics(response.data);
+        setError("");
       })
-      .catch(() => {
-        setMetrics({
-          total_users: 100,
-          pending_transactions: 10,
-          total_investments: 50,
-          active_options: 5,
-        });
+      .catch((err) => {
+        setError("Failed to fetch metrics");
+        console.error("Metrics fetch error:", err);
       });
   }, []);
 
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-lg font-semibold">Total Users</h2>
