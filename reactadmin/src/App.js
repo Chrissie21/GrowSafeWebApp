@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Sidebar from "./components /Sidebar";
-import Login from "./components /Login";
-import AdminPanel from "./components /AdminPanel";
+import Sidebar from "./components/ Sidebar";
+import Login from "./components/ Login";
+import AdminPanel from "./components/ AdminPanel";
 
 const apiBaseUrl = "http://localhost:8000/api/auth/";
 
-// Axios instance with JWT interceptor
 const api = axios.create({
   baseURL: apiBaseUrl,
   headers: { "Content-Type": "application/json" },
@@ -23,6 +22,34 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) throw new Error("No refresh token");
+        const response = await axios.post(`${apiBaseUrl}token/refresh/`, {
+          refresh: refreshToken,
+        });
+        const newAccessToken = response.data.access;
+        localStorage.setItem("accessToken", newAccessToken);
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        console.error("Token refresh failed:", refreshError);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/#login";
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem("accessToken"),
@@ -31,7 +58,7 @@ function App() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      setUser({ is_admin: true }); // Assume admin for simplicity
+      setUser({ is_admin: true });
     }
   }, [isAuthenticated]);
 
