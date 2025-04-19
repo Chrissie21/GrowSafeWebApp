@@ -55,6 +55,7 @@ function App() {
     !!localStorage.getItem("accessToken"),
   );
   const [user, setUser] = useState(null);
+  const [logoutError, setLogoutError] = useState("");
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -64,26 +65,45 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      await api.post("logout/", {
-        refresh: localStorage.getItem("refreshToken"),
-      });
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        await api.post("logout/", { refresh: refreshToken });
+      }
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       setIsAuthenticated(false);
       setUser(null);
+      setLogoutError("");
+      window.location.href = "/#login"; // Redirect to login page
     } catch (error) {
       console.error("Logout failed:", error);
+      setLogoutError("Failed to logout. Please try again.");
+      // Still clear tokens and redirect to ensure security
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      setIsAuthenticated(false);
+      setUser(null);
+      window.location.href = "/#login";
     }
   };
 
-  if (!isAuthenticated) {
-    return <Login setIsAuthenticated={setIsAuthenticated} />;
-  }
-
   return (
     <div className="flex h-screen">
-      <Sidebar handleLogout={handleLogout} />
-      <div className="flex-1 p-6 overflow-auto">{user && <AdminPanel />}</div>
+      {logoutError && (
+        <div className="absolute top-0 w-full bg-red-500 text-white p-2 text-center">
+          {logoutError}
+        </div>
+      )}
+      {isAuthenticated ? (
+        <>
+          <Sidebar handleLogout={handleLogout} />
+          <div className="flex-1 p-6 overflow-auto">
+            {user && <AdminPanel />}
+          </div>
+        </>
+      ) : (
+        <Login setIsAuthenticated={setIsAuthenticated} />
+      )}
     </div>
   );
 }
