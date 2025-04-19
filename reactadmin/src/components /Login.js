@@ -1,40 +1,44 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState } from 'react';
+import axios from 'axios';
+import { motion } from 'framer-motion';
 
-const apiBaseUrl = "http://localhost:8000/api/auth/";
+const apiBaseUrl = 'http://localhost:8000/api/auth/';
 const api = axios.create({ baseURL: apiBaseUrl });
 
 function Login({ setIsAuthenticated }) {
-  const [usernameOrEmail, setUsernameOrEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post("login/", { usernameOrEmail, password });
+      const response = await api.post('login/', { usernameOrEmail, password });
       if (response.data.is_admin) {
-        localStorage.setItem("accessToken", response.data.access);
-        localStorage.setItem("refreshToken", response.data.refresh);
+        localStorage.setItem('accessToken', response.data.access);
+        localStorage.setItem('refreshToken', response.data.refresh);
         setIsAuthenticated(true);
-        setError("");
+        setError('');
       } else {
-        setError("Only admins can access the panel");
+        setError('Only admins can access the panel');
       }
     } catch (error) {
-      setError("Invalid credentials");
+      setError('Invalid credentials');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-200">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-200 overflow-hidden">
+      <motion.div
+        className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">
-              Username or Email
-            </label>
+            <label className="block text-sm font-medium">Username or Email</label>
             <input
               type="text"
               value={usernameOrEmail}
@@ -61,7 +65,7 @@ function Login({ setIsAuthenticated }) {
             Login
           </button>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }
