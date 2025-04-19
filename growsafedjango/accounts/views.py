@@ -580,6 +580,8 @@ def homepage(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def admin_metrics(request):
+    if not request.user.is_superuser:
+        return Response({'error': 'Only superusers can access metrics'}, status=status.HTTP_403_FORBIDDEN)
     return Response({
         'total_users': User.objects.count(),
         'pending_transactions': Transaction.objects.filter(status='PENDING').count(),
