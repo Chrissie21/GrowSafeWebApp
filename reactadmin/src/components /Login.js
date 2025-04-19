@@ -17,6 +17,10 @@ function Login({ setIsAuthenticated }) {
       if (response.data.is_admin) {
         localStorage.setItem('accessToken', response.data.access);
         localStorage.setItem('refreshToken', response.data.refresh);
+        console.log('Tokens_set: ', {
+          accessToken: localStorage.getItem('accessToken'),
+          refreshToken: localStorage.getItem('refreshToken'),
+        })
         setIsAuthenticated(true);
         setError('');
       } else {
