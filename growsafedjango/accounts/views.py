@@ -569,3 +569,20 @@ def admin_create_user(request):
         return Response({'message': 'User created successfully', 'user_id': user.id}, status=status.HTTP_201_CREATED)
     except Exception as e:
         return Response({'error': f'Failed to create user: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def admin_delete_user(request, user_id):
+    if not request.user.is_superuser:
+        return Response({'error': 'Only superusers can delete users'}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        user = User.objects.get(id=user_id)
+        if user == request.user:
+            return Response({'error': 'Cannot delete yourself'}, status=status.HTTP_400_BAD_REQUEST)
+        user.delete()
+        return Response({'message': 'User deleted successfully'}, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': f'Failed to delete user: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
