@@ -74,11 +74,10 @@ function App() {
       setIsAuthenticated(false);
       setUser(null);
       setLogoutError("");
-      window.location.href = "/#login"; // Redirect to login page
+      window.location.href = "/#login";
     } catch (error) {
       console.error("Logout failed:", error);
       setLogoutError("Failed to logout. Please try again.");
-      // Still clear tokens and redirect to ensure security
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       setIsAuthenticated(false);
@@ -88,19 +87,19 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="min-h-screen bg-gray-200">
       {logoutError && (
         <div className="absolute top-0 w-full bg-red-500 text-white p-2 text-center">
           {logoutError}
         </div>
       )}
       {isAuthenticated ? (
-        <>
+        <div className="flex h-screen">
           <Sidebar handleLogout={handleLogout} />
           <div className="flex-1 p-6 overflow-auto">
             {user && <AdminPanel />}
           </div>
-        </>
+        </div>
       ) : (
         <Login setIsAuthenticated={setIsAuthenticated} />
       )}
