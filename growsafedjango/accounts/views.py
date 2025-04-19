@@ -365,6 +365,26 @@ def admin_approve_transaction(request, transaction_id):
     except Transaction.DoesNotExist:
         return Response({'error': 'Transaction not found or already processed'}, status=status.HTTP_404_NOT_FOUND)
 
+# Admin: Set transaction to Pending
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def admin_set_transaction_pending(request, transaction_id):
+    if not request.user.is_superuser:
+        return Response({'error': 'Only superusers can modify transaction status'}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        with transaction.atomic():
+            tx = Transaction.objects.get(id=transaction_id)
+            if tx.status == 'PENDING':
+                return Response({'message': 'Transaction is already pending'}, status=status.HTTP_200_OK)
+            tx.status = 'PENDING'
+            tx.processed_by = None
+            tx.notes = request.data.get('notes', '')
+            tx.save()
+        return Response({'message': 'Transaction set to pending'}, status=status.HTTP_200_OK)
+    except Transaction.DoesNotExist:
+        return Response({'error': 'Transaction not found'}, status=status.HTTP_404_NOT_FOUND)
+
 # Admin: Decline transaction
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
