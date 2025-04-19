@@ -237,6 +237,42 @@ def withdraw(request):
     except (ValueError, TypeError):
         return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
 
+# Add investment option.
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def admin_create_investment_option(request):
+    if not request.user.is_superuser:
+        return Response({'error': 'Only superusers can create investment options'}, status=status.HTTP_403_FORBIDDEN)
+
+    name = request.data.get('name')
+    min_investment = request.data.get('min_investment')
+    expected_return = request.data.get('expected_return')
+    risk_level = request.data.get('risk_level')
+
+    if not all([name, min_investment, expected_return, risk_level]):
+        return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if risk_level not in ['LOW', 'MEDIUM', 'HIGH']:
+        return Response({'error': 'Invalid risk level'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        min_investment = Decimal(min_investment)
+        expected_return = Decimal(expected_return)
+        option = InvestmentOption.objects.create(
+            name=name,
+            min_investment=min_investment,
+            expected_return=expected_return,
+            risk_level=risk_level
+        )
+        return Response({
+            'message': 'Investment option created successfully',
+            'option_id': option.id
+        }, status=status.HTTP_201_CREATED)
+    except (ValueError, TypeError):
+        return Response({'error': 'Invalid numerical values'}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': f'Failed to create investment option: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+
 # Invest (unchanged, but wrapped in transaction)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
