@@ -14,6 +14,12 @@ function Sidebar({ handleLogout }) {
         <a href="#mobile" className="block p-4 hover:bg-gray-700">
           Update Mobile
         </a>
+        <a href="#users" className="block p-4 hover:bg-gray-700">
+          Users
+        </a>
+        <a href="#investment-options" className="block p-4 hover:bg-gray-700">
+          Investment Options
+        </a>
       </nav>
       <button
         onClick={handleLogout}
