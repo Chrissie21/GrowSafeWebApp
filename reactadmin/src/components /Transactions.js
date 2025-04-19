@@ -17,7 +17,7 @@ function Transactions() {
         setError("");
       })
       .catch((err) => {
-        setError("Failed to fetch transactions");
+        setError(`Failed to fetch transactions: ${err.response?.status === 403 ? 'Insufficient permissions (superuser required)' : err.response?.status || 'Network error'}`);
         setLoading(false);
         console.error("Transactions fetch error:", err);
       });

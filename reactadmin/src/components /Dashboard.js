@@ -22,7 +22,7 @@ import React, { useState, useEffect } from 'react';
         setError('');
       } catch (err) {
         console.error('Metrics fetch error:', err.response || err); // Debug
-        setError(`Failed to fetch metrics: ${err.response?.status || 'Network error'}`);
+        setError(`Failed to fetch metrics: ${err.response?.status === 403 ? 'Insufficient permissions (superuser required)' : err.response?.status || 'Network error'}`);
       } finally {
         setIsLoading(false);
       }
