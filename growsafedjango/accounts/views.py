@@ -239,10 +239,10 @@ def withdraw(request):
 
 # Add investment option.
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
 def admin_create_investment_option(request):
-    if not request.user.is_superuser:
-        return Response({'error': 'Only superusers can create investment options'}, status=status.HTTP_403_FORBIDDEN)
+    # if not request.user.is_superuser:
+        # return Response({'error': 'Only superusers can create investment options'}, status=status.HTTP_403_FORBIDDEN)
 
     name = request.data.get('name')
     min_investment = request.data.get('min_investment')
@@ -299,7 +299,7 @@ def available_investments(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def invest(request):
     option_id = request.data.get('option_id')
     amount = request.data.get('amount')
@@ -374,7 +374,7 @@ def admin_list_transactions(request):
 
 # Admin: Approve transaction
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
 def admin_approve_transaction(request, transaction_id):
     try:
         with transaction.atomic():
@@ -401,7 +401,7 @@ def admin_approve_transaction(request, transaction_id):
 
 # Admin: Set transaction to Pending
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
 def admin_set_transaction_pending(request, transaction_id):
     if not request.user.is_superuser:
         return Response({'error': 'Only superusers can modify transaction status'}, status=status.HTTP_403_FORBIDDEN)
@@ -421,7 +421,7 @@ def admin_set_transaction_pending(request, transaction_id):
 
 # Admin: Decline transaction
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
 def admin_decline_transaction(request, transaction_id):
     notes = request.data.get('notes', '')
     try:
@@ -437,7 +437,7 @@ def admin_decline_transaction(request, transaction_id):
 
 # Admin: Update user mobile number
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
 def admin_update_mobile(request, user_id):
     mobile_number = request.data.get('mobile_number')
     try:
@@ -456,7 +456,7 @@ def admin_update_mobile(request, user_id):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def check_transaction_status(request, transaction_id):
     try:
         tx = Transaction.objects.get(transaction_id=transaction_id, user=request.user)
@@ -500,7 +500,7 @@ def account_activity(request):
         )
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def change_password(request):
     try:
         user = request.user
@@ -551,7 +551,7 @@ def change_password(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def sell(request):
     investment_id = request.data.get('investment_id')
     try:
@@ -580,8 +580,8 @@ def homepage(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def admin_metrics(request):
-    if not request.user.is_superuser:
-        return Response({'error': 'Only superusers can access metrics'}, status=status.HTTP_403_FORBIDDEN)
+    #if not request.user.is_superuser:
+        #return Response({'error': 'Only superusers can access metrics'}, status=status.HTTP_403_FORBIDDEN)
     return Response({
         'total_users': User.objects.count(),
         'pending_transactions': Transaction.objects.filter(status='PENDING').count(),
@@ -591,7 +591,7 @@ def admin_metrics(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
 def admin_create_user(request):
     if not request.user.is_superuser:
         return Response({'error': 'Only superusers can create users'}, status=status.HTTP_403_FORBIDDEN)
@@ -627,7 +627,7 @@ def admin_create_user(request):
         return Response({'error': f'Failed to create user: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([AllowAny])
 def admin_delete_user(request, user_id):
     if not request.user.is_superuser:
         return Response({'error': 'Only superusers can delete users'}, status=status.HTTP_403_FORBIDDEN)
