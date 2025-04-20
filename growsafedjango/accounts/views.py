@@ -82,6 +82,8 @@ def login(request):
             pass
 
     if user is not None:
+        # Ensure user profile exists
+        UserProfile.objects.get_or_create(user=user)
         refresh = RefreshToken.for_user(user)
 
         # Log in the login activity
