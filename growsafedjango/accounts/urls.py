@@ -30,4 +30,5 @@ urlpatterns = [
     path('admin/user/<int:user_id>/delete/', views.admin_delete_user, name='admin_delete_user'),
     path('admin/transaction/<int:transaction_id>/pending/', views.admin_set_transaction_pending, name='admin_set_transaction_pending'),
     path('admin/investment-options/create/', views.admin_create_investment_option, name='admin_create_investment_option'),
+    path('admin/users/', views.admin_list_users, name='admin_list_users'),
 ]
