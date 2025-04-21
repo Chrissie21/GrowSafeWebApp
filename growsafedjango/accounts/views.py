@@ -71,7 +71,7 @@ def login(request):
     password = request.data.get('password')
     user = authenticate(request, username=username_or_email, password=password)
 
-    if user is None and '@' in username_or_email:
+    if user == '@' in username_or_email:
         try:
             # Find user with the email
             user_obj = User.objects.get(email=username_or_email)
@@ -644,3 +644,31 @@ def admin_delete_user(request, user_id):
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': f'Failed to delete user: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Admin: List all users
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_list_users(request):
+    try:
+        users = User.objects.select_related('profile').all()
+        data = [
+            {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'total_balance': str(user.profile.total) if hasattr(user, 'profile') else '0.00',
+            }
+            for user in users
+        ]
+        return Response(data, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(f"Error in admin_list_users: {str(e)}")
+        return Response(
+            {"error": f"Failed to fetch users: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
