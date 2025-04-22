@@ -353,7 +353,7 @@ def refresh_token(request):
 
 # Admin: List all transactions
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAdminUser])
 def admin_list_transactions(request):
     transactions = Transaction.objects.all().select_related('user', 'processed_by')
     data = [
@@ -376,7 +376,7 @@ def admin_list_transactions(request):
 
 # Admin: Approve transaction
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAdminUser])
 def admin_approve_transaction(request, transaction_id):
     try:
         with transaction.atomic():
@@ -403,7 +403,7 @@ def admin_approve_transaction(request, transaction_id):
 
 # Admin: Set transaction to Pending
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAdminUser])
 def admin_set_transaction_pending(request, transaction_id):
     if not request.user.is_superuser:
         return Response({'error': 'Only superusers can modify transaction status'}, status=status.HTTP_403_FORBIDDEN)

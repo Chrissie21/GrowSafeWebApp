@@ -7,6 +7,6 @@ from accounts.views import homepage
 urlpatterns = [
     path('', homepage, name='homepage'),
     path('admin/', admin.site.urls),
-    path('api/auth/', include('accounts.urls')),
+    path('api/auth/', include('accounts.urls', namespace='api-auth')),
     path('accounts/', include('django.contrib.auth.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -66,19 +66,17 @@ class Transaction(models.Model):
     transaction_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    mobile_number = models.CharField(max_length=15, blank=True, null=True)  # Mobile number used
+    mobile_number = models.CharField(max_length=15, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     processed_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='processed_transactions', limit_choices_to={'is_staff': True}
-    )  # Admin who processed it
-    notes = models.TextField(blank=True, null=True)  # Optional notes (e.g., decline reason)
-    transaction_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    )
+    notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.transaction_type} - {self.user.username} - {self.amount} - {self.status}"
-
 class TransactionStatusHistory(models.Model):
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='status_history')
     status = models.CharField(max_length=20, choices=Transaction.STATUS_CHOICES)
