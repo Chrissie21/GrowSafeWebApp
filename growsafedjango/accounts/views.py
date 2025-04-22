@@ -580,7 +580,7 @@ def homepage(request):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAdminUser])
 def admin_metrics(request):
     #if not request.user.is_superuser:
         #return Response({'error': 'Only superusers can access metrics'}, status=status.HTTP_403_FORBIDDEN)
