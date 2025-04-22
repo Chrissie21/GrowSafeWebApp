@@ -13,6 +13,8 @@ api.interceptors.request.use(
     const token = localStorage.getItem("access_token") || sessionStorage.getItem("access_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn("No token found in localStorage or sessionStorage")
     }
     return config;
   },
@@ -21,33 +23,45 @@ api.interceptors.request.use(
 
 // Interceptor to handle token refresh on 401 errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) =>  response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if(error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      try {
-        const refreshToken = localStorage.getItem("refresh_token");
+      try{
+        // Check both localStorage and sessionStorage for refresh_token
+        const refreshToken = localStorage.getItem("refresh_token") || sessionStorage.getItem('refresh_token');
+        if (!refreshToken){
+          throw new Error("No refresh token available")
+        }
         const response = await axios.post(
           "http://localhost:8000/api/auth/refresh/",
           {
-            refresh: refreshToken,
-          },
+            refreshToken,
+          }
         );
         const { access } = response.data;
-        localStorage.setItem("access_token", access);
-        originalRequest.headers.Authorization = `Bearer ${access}`;
+        // Store new access token in the same storage as the refreshToken
+        if (localStorage.getItem("refresh_token")) {
+          localStorage.setItem("access_token", access);
+        } else if(sessionStorage.setItem("refresh_token")){
+          localStorage.setItem("access_token", access);
+        }
+        originalRequest.headers.Authorization = 'Bearer ${access}';
         return api(originalRequest);
       } catch (refreshError) {
-        // Redirect to login on refresh failure
+        console.error("Token refresh failed:", refreshError);
+        // Clear both storages and redirect to login
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
+        sessionStorage.removeItem("access_token");
+        sessionStorage.removeItem("refresh_token");
         window.location.href = "/auth/login";
         return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error);
-  },
+  }
 );
 
 export default api;
