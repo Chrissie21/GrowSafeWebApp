@@ -16,7 +16,7 @@ api.interceptors.request.use((config) => {
 
 // RESPONSE INTERCEPTOR – Refresh token on 401
 api.interceptors.response.use(
-  (response) => response, // If the response is fine, just return it
+  (response) => response, // If the response fine, just return it
   async (error) => {
     const originalRequest = error.config;
 

@@ -1,41 +1,47 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-
-const api = axios.create({ baseURL: "http://localhost:8000/api/auth/" });
+import api from "../api";
+import { useNavigate } from "react-router-dom";
 
 function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const fetchTransactions = async () => {
+    try {
+      const response = await api.get("admin/transactions/");
+      setTransactions(response.data);
+      setLoading(false);
+      setError("");
+    } catch (err) {
+      if (err.response?.status === 401) {
+        navigate("/login"); // Redirect to login on unauthorized
+      } else if (err.response?.status === 403) {
+        setError("Insufficient permissions (superuser required)");
+      } else {
+        setError("Failed to fetch transactions");
+      }
+      setLoading(false);
+      console.error("Transactions fetch error:", err);
+    }
+  };
 
   useEffect(() => {
-    api
-      .get("admin/transactions/")
-      .then((response) => {
-        setTransactions(response.data);
-        setLoading(false);
-        setError("");
-      })
-      .catch((err) => {
-        setError(`Failed to fetch transactions: ${err.response?.status === 403 ? 'Insufficient permissions (superuser required)' : err.response?.status || 'Network error'}`);
-        setLoading(false);
-        console.error("Transactions fetch error:", err);
-      });
+    fetchTransactions();
   }, []);
 
   const handleApprove = async (id) => {
     try {
       await api.post(`admin/transaction/${id}/approve/`);
-      setTransactions(
-        transactions.map((tx) =>
-          tx.id === id
-            ? { ...tx, status: "APPROVED", processed_by: "You" }
-            : tx,
-        ),
-      );
+      await fetchTransactions(); // Re-fetch to ensure consistency
       setError("");
     } catch (err) {
-      setError("Failed to approve transaction");
+      if (err.response?.status === 401) {
+        navigate("/login");
+      } else {
+        setError("Failed to approve transaction");
+      }
       console.error("Approve error:", err);
     }
   };
@@ -45,21 +51,14 @@ function Transactions() {
       await api.post(`admin/transaction/${id}/decline/`, {
         notes: "Declined by admin",
       });
-      setTransactions(
-        transactions.map((tx) =>
-          tx.id === id
-            ? {
-                ...tx,
-                status: "DECLINED",
-                processed_by: "You",
-                notes: "Declined by admin",
-              }
-            : tx,
-        ),
-      );
+      await fetchTransactions(); // Re-fetch to ensure consistency
       setError("");
     } catch (err) {
-      setError("Failed to decline transaction");
+      if (err.response?.status === 401) {
+        navigate("/login");
+      } else {
+        setError("Failed to decline transaction");
+      }
       console.error("Decline error:", err);
     }
   };
@@ -69,21 +68,14 @@ function Transactions() {
       await api.post(`admin/transaction/${id}/pending/`, {
         notes: "Set to pending by admin",
       });
-      setTransactions(
-        transactions.map((tx) =>
-          tx.id === id
-            ? {
-                ...tx,
-                status: "PENDING",
-                processed_by: null,
-                notes: "Set to pending by admin",
-              }
-            : tx,
-        ),
-      );
+      await fetchTransactions(); // Re-fetch to ensure consistency
       setError("");
     } catch (err) {
-      setError("Failed to set transaction to pending");
+      if (err.response?.status === 401) {
+        navigate("/login");
+      } else {
+        setError("Failed to set transaction to pending");
+      }
       console.error("Set pending error:", err);
     }
   };
