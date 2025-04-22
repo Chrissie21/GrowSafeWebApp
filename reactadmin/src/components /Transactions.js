@@ -15,15 +15,16 @@ function Transactions() {
       setLoading(false);
       setError("");
     } catch (err) {
+      const errorMessage = err.response?.data?.error || err.message || "Network error";
       if (err.response?.status === 401) {
-        navigate("/login"); // Redirect to login on unauthorized
+        navigate("/login", { replace: true });
       } else if (err.response?.status === 403) {
-        setError("Insufficient permissions (superuser required)");
+        setError(`Insufficient permissions: ${errorMessage}`);
       } else {
-        setError("Failed to fetch transactions");
+        setError(`Failed to fetch transactions: ${errorMessage}`);
       }
       setLoading(false);
-      console.error("Transactions fetch error:", err);
+      console.error("Transactions fetch error:", err.response || err);
     }
   };
 
@@ -32,51 +33,72 @@ function Transactions() {
   }, []);
 
   const handleApprove = async (id) => {
+    if (!id) {
+      setError("Invalid transaction ID");
+      return;
+    }
     try {
       await api.post(`admin/transaction/${id}/approve/`);
-      await fetchTransactions(); // Re-fetch to ensure consistency
+      await fetchTransactions();
       setError("");
     } catch (err) {
+      const errorMessage = err.response?.data?.error || err.message || "Network error";
       if (err.response?.status === 401) {
-        navigate("/login");
+        navigate("/login", { replace: true });
+      } else if (err.response?.status === 403) {
+        setError(`Cannot approve transaction: ${errorMessage}`);
       } else {
-        setError("Failed to approve transaction");
+        setError(`Failed to approve transaction: ${errorMessage}`);
       }
-      console.error("Approve error:", err);
+      console.error("Approve error:", err.response || err);
     }
   };
 
   const handleDecline = async (id) => {
+    if (!id) {
+      setError("Invalid transaction ID");
+      return;
+    }
     try {
       await api.post(`admin/transaction/${id}/decline/`, {
         notes: "Declined by admin",
       });
-      await fetchTransactions(); // Re-fetch to ensure consistency
+      await fetchTransactions();
       setError("");
     } catch (err) {
+      const errorMessage = err.response?.data?.error || err.message || "Network error";
       if (err.response?.status === 401) {
-        navigate("/login");
+        navigate("/login", { replace: true });
+      } else if (err.response?.status === 403) {
+        setError(`Cannot decline transaction: ${errorMessage}`);
       } else {
-        setError("Failed to decline transaction");
+        setError(`Failed to decline transaction: ${errorMessage}`);
       }
-      console.error("Decline error:", err);
+      console.error("Decline error:", err.response || err);
     }
   };
 
   const handleSetPending = async (id) => {
+    if (!id) {
+      setError("Invalid transaction ID");
+      return;
+    }
     try {
       await api.post(`admin/transaction/${id}/pending/`, {
         notes: "Set to pending by admin",
       });
-      await fetchTransactions(); // Re-fetch to ensure consistency
+      await fetchTransactions();
       setError("");
     } catch (err) {
+      const errorMessage = err.response?.data?.error || err.message || "Network error";
       if (err.response?.status === 401) {
-        navigate("/login");
+        navigate("/login", { replace: true });
+      } else if (err.response?.status === 403) {
+        setError(`Cannot set transaction to pending: ${errorMessage}`);
       } else {
-        setError("Failed to set transaction to pending");
+        setError(`Failed to set transaction to pending: ${errorMessage}`);
       }
-      console.error("Set pending error:", err);
+      console.error("Set pending error:", err.response || err);
     }
   };
 
