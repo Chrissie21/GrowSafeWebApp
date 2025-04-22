@@ -38,12 +38,20 @@ function Dashboard() {
       setUsers(usersResponse.data);
       setError('');
     } catch (err) {
-      console.error('Fetch error:', err);
-      // Fallback for environments without optional chaining
-      const status = err.response && err.response.status ? err.response.status : 'Unknown';
-      const errorMessage = err.response && err.response.status === 403
-        ? 'Insufficient permissions (superuser required)'
-        : `Network error (Status: ${status})`;
+      console.error('Axios error:', err);
+      console.error('Error response:', err.response ? err.response.data : 'No response');
+      let errorMessage = 'Network error';
+      if (err.response) {
+        errorMessage = err.response.status === 403
+          ? 'Insufficient permissions (superuser required)'
+          : err.response.status === 401
+          ? `Authentication failed: ${err.response.data.detail || 'Invalid credentials'}`
+          : `Server error (Status: ${err.response.status})`;
+      } else if (err.request) {
+        errorMessage = 'No response from server. Check if the backend is running.';
+      } else {
+        errorMessage = err.message;
+      }
       setError(`Failed to fetch data: ${errorMessage}`);
     } finally {
       setIsLoading(false);
