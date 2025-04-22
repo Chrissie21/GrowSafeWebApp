@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const api = axios.create({ baseURL: 'http://localhost:8000/api/auth/' });
-
-// Add interceptor to include JWT token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import api from '../api';
 
 function Dashboard() {
   const [metrics, setMetrics] = useState({
@@ -26,37 +15,38 @@ function Dashboard() {
   const [editForm, setEditForm] = useState({ id: 0, first_name: '', last_name: '', email: '' });
 
   const fetchMetrics = async () => {
-    setIsLoading(true);
-    try {
-      const [metricsResponse, usersResponse] = await Promise.all([
-        api.get('admin/metrics/'),
-        api.get('admin/users/'),
-      ]);
-      console.log('Metrics response:', metricsResponse.data);
-      console.log('Users response:', usersResponse.data);
-      setMetrics(metricsResponse.data);
-      setUsers(usersResponse.data);
-      setError('');
-    } catch (err) {
-      console.error('Axios error:', err);
-      console.error('Error response:', err.response ? err.response.data : 'No response');
-      let errorMessage = 'Network error';
-      if (err.response) {
-        errorMessage = err.response.status === 403
-          ? 'Insufficient permissions (superuser required)'
-          : err.response.status === 401
-          ? `Authentication failed: ${err.response.data.detail || 'Invalid credentials'}`
-          : `Server error (Status: ${err.response.status})`;
-      } else if (err.request) {
-        errorMessage = 'No response from server. Check if the backend is running.';
-      } else {
-        errorMessage = err.message;
-      }
-      setError(`Failed to fetch data: ${errorMessage}`);
-    } finally {
-      setIsLoading(false);
+  setIsLoading(true);
+  try {
+    const [metricsResponse, usersResponse] = await Promise.all([
+      api.get('admin/metrics/'),
+      api.get('admin/users/'),
+    ]);
+    console.log('Metrics response:', metricsResponse.data);
+    console.log('Users response:', usersResponse.data);
+    setMetrics(metricsResponse.data);
+    setUsers(usersResponse.data);
+    setError('');
+  } catch (err) {
+    console.error('Axios error:', err);
+    console.error('Error response:', err.response ? err.response.data : 'No response');
+    let errorMessage = 'Network error';
+    if (err.response) {
+      errorMessage = err.response.status === 403
+        ? 'Insufficient permissions (superuser required)'
+        : err.response.status === 401
+        ? `Authentication failed: ${err.response.data.detail || 'Invalid credentials'}`
+        : `Server error (Status: ${err.response.status})`;
+    } else if (err.request) {
+      errorMessage = 'No response from server. Check if the backend is running.';
+    } else {
+      errorMessage = err.message;
     }
+    setError(`Failed to fetch data: ${errorMessage}`);
+  } finally {
+    setIsLoading(false);
+  }
   };
+
 
   const handleEdit = (user) => {
     setEditingUser(user);
