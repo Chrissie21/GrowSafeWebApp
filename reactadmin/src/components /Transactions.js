@@ -6,7 +6,7 @@ function Transactions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Currency formatter for TSh
+  // Currency TSh
   const formatTSh = (amount) => {
     return new Intl.NumberFormat("sw-TZ", {
       style: "currency",

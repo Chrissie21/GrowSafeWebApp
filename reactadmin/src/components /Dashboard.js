@@ -14,39 +14,47 @@ function Dashboard() {
   const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({ id: 0, first_name: '', last_name: '', email: '' });
 
-  const fetchMetrics = async () => {
-  setIsLoading(true);
-  try {
-    const [metricsResponse, usersResponse] = await Promise.all([
-      api.get('admin/metrics/'),
-      api.get('admin/users/'),
-    ]);
-    console.log('Metrics response:', metricsResponse.data);
-    console.log('Users response:', usersResponse.data);
-    setMetrics(metricsResponse.data);
-    setUsers(usersResponse.data);
-    setError('');
-  } catch (err) {
-    console.error('Axios error:', err);
-    console.error('Error response:', err.response ? err.response.data : 'No response');
-    let errorMessage = 'Network error';
-    if (err.response) {
-      errorMessage = err.response.status === 403
-        ? 'Insufficient permissions (superuser required)'
-        : err.response.status === 401
-        ? `Authentication failed: ${err.response.data.detail || 'Invalid credentials'}`
-        : `Server error (Status: ${err.response.status})`;
-    } else if (err.request) {
-      errorMessage = 'No response from server. Check if the backend is running.';
-    } else {
-      errorMessage = err.message;
-    }
-    setError(`Failed to fetch data: ${errorMessage}`);
-  } finally {
-    setIsLoading(false);
-  }
+  // Currency formatter for TSh
+  const formatTSh = (amount) => {
+    return new Intl.NumberFormat('sw-TZ', {
+      style: 'currency',
+      currency: 'TZS',
+      minimumFractionDigits: 0, // No decimals for whole TSh
+    }).format(Number(amount));
   };
 
+  const fetchMetrics = async () => {
+    setIsLoading(true);
+    try {
+      const [metricsResponse, usersResponse] = await Promise.all([
+        api.get('admin/metrics/'),
+        api.get('admin/users/'),
+      ]);
+      console.log('Metrics response:', metricsResponse.data);
+      console.log('Users response:', usersResponse.data);
+      setMetrics(metricsResponse.data);
+      setUsers(usersResponse.data);
+      setError('');
+    } catch (err) {
+      console.error('Axios error:', err);
+      console.error('Error response:', err.response ? err.response.data : 'No response');
+      let errorMessage = 'Network error';
+      if (err.response) {
+        errorMessage = err.response.status === 403
+          ? 'Insufficient permissions (superuser required)'
+          : err.response.status === 401
+          ? `Authentication failed: ${err.response.data.detail || 'Invalid credentials'}`
+          : `Server error (Status: ${err.response.status})`;
+      } else if (err.request) {
+        errorMessage = 'No response from server. Check if the backend is running.';
+      } else {
+        errorMessage = err.message;
+      }
+      setError(`Failed to fetch data: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleEdit = (user) => {
     setEditingUser(user);
@@ -150,7 +158,7 @@ function Dashboard() {
                     <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{user.first_name}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{user.last_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">${user.total_balance}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{formatTSh(user.total_balance)}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleEdit(user)}
@@ -161,7 +169,7 @@ function Dashboard() {
                       <button
                         onClick={() => handleDelete(user.id)}
                         className="text-red-600 hover:text-red-800"
-                        disabled={user.is_superuser} // Prevent deleting self or other superusers
+                        disabled={user.is_superuser}
                       >
                         Delete
                       </button>
