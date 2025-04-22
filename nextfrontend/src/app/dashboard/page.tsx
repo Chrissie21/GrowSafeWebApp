@@ -5,7 +5,7 @@ import Head from "next/head";
 import { useRouter, usePathname } from "next/navigation";
 import api from "../../lib/api";
 import { AxiosError } from "axios";
-import { motion, AnimatePresence } from "framer-motion"; // Add AnimatePresence for modal
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ApiErrorResponse {
   error?: string;
@@ -18,9 +18,12 @@ const Dashboard = () => {
   const [scrolled, setScrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false); // State for modal
-  const [depositAmount, setDepositAmount] = useState(""); // State for deposit input
-  const [depositError, setDepositError] = useState<string | null>(null); // State for deposit error
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositError, setDepositError] = useState<string | null>(null);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false); // State for withdraw modal
+  const [withdrawAmount, setWithdrawAmount] = useState(""); // State for withdraw input
+  const [withdrawError, setWithdrawError] = useState<string | null>(null); // State for withdraw error
 
   const [userData, setUserData] = useState<{
     firstName: string;
@@ -151,10 +154,10 @@ const Dashboard = () => {
         ]);
 
         setLoading(false);
-      } catch (err: AxiosError) {
+      } catch (err: unknown) {
         setError("Failed to load data. Please try again.");
         setLoading(false);
-        if (err.response?.status === 401) {
+        if ((err as AxiosError).response?.status === 401) {
           router.push("/auth/login");
         }
       }
@@ -185,10 +188,14 @@ const Dashboard = () => {
   const handleLogout = async () => {
     try {
       await api.post("logout/", {
-        refresh: localStorage.getItem("refresh_token"),
+        refresh:
+          localStorage.getItem("refresh_token") ||
+          sessionStorage.getItem("refresh_token"),
       });
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
+      sessionStorage.removeItem("access_token");
+      sessionStorage.removeItem("refresh_token");
       router.push("/auth/login");
     } catch (err) {
       console.error("Logout failed:", err);
@@ -196,7 +203,6 @@ const Dashboard = () => {
     }
   };
 
-  // Handle deposit submission
   const handleDeposit = async () => {
     if (
       !depositAmount ||
@@ -269,8 +275,97 @@ const Dashboard = () => {
           }),
         ),
       );
-    } catch (err: AxiosError<ApiErrorResponse>) {
-      setDepositError(err.response?.data?.error || "Deposit failed");
+    } catch (err: unknown) {
+      setDepositError(
+        (err as AxiosError<ApiErrorResponse>).response?.data?.error ||
+          "Deposit failed",
+      );
+    }
+  };
+
+  const handleWithdraw = async () => {
+    const amount = Number(withdrawAmount);
+    if (
+      !withdrawAmount ||
+      isNaN(amount) ||
+      amount <= 0 ||
+      amount > userData.availableCash
+    ) {
+      setWithdrawError(
+        amount > userData.availableCash
+          ? "Amount exceeds available cash"
+          : "Please enter a valid amount",
+      );
+      return;
+    }
+
+    try {
+      const response = await api.post("withdraw/", {
+        amount: withdrawAmount,
+        mobile_number: userData.mobile_number || "1234567890",
+      });
+      alert(`Withdrawal request submitted: ${response.data.message}`);
+      setIsWithdrawModalOpen(false);
+      setWithdrawAmount("");
+      setWithdrawError(null);
+
+      // Refresh data
+      const profileResponse = await api.get("profile/");
+      const data = profileResponse.data;
+      setUserData({
+        firstName: data.first_name || data.username,
+        lastName: data.last_name || "",
+        email: data.email,
+        accountBalance: parseFloat(data.total) || 0,
+        investmentsValue:
+          data.investments.reduce(
+            (sum: number, inv: { amount: string }) =>
+              sum + parseFloat(inv.amount),
+            0,
+          ) || 0,
+        availableCash: parseFloat(data.total) || 0,
+        mobile_number: data.mobile_number || "",
+      });
+      setPortfolioData(
+        data.investments.map(
+          (
+            inv: { name: string; amount: string; daily_return_rate: string },
+            index: number,
+          ) => ({
+            id: index + 1,
+            name: inv.name,
+            allocation: calculateAllocation(inv.amount, data.investments),
+            value: parseFloat(inv.amount),
+            change: parseFloat(inv.daily_return_rate) * 100,
+          }),
+        ),
+      );
+      setRecentTransactions(
+        data.transactions.map(
+          (
+            tx: {
+              type: string;
+              amount: string;
+              status: string;
+              created_at: string;
+              notes: string;
+            },
+            index: number,
+          ) => ({
+            id: index + 1,
+            date: new Date(tx.created_at).toISOString().split("T")[0],
+            type: tx.type,
+            investment: tx.notes || "Cash",
+            amount: parseFloat(tx.amount),
+            status: tx.status,
+          }),
+        ),
+      );
+    } catch (err: unknown) {
+      setWithdrawError(
+        (err as AxiosError<ApiErrorResponse>).response?.data?.error ||
+          "Withdrawal failed",
+      );
     }
   };
 
@@ -511,12 +606,20 @@ const Dashboard = () => {
                 maximumFractionDigits: 2,
               })}
             </p>
-            <button
-              onClick={() => setIsDepositModalOpen(true)} // Open modal
-              className="mt-3 text-sm px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-            >
-              Add Funds
-            </button>
+            <div className="mt-3 flex space-x-2">
+              <button
+                onClick={() => setIsDepositModalOpen(true)}
+                className="text-sm px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+              >
+                Add Funds
+              </button>
+              <button
+                onClick={() => setIsWithdrawModalOpen(true)}
+                className="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Withdraw Funds
+              </button>
+            </div>
           </div>
         </div>
 
@@ -549,7 +652,7 @@ const Dashboard = () => {
                     value={depositAmount}
                     onChange={(e) => {
                       setDepositAmount(e.target.value);
-                      setDepositError(null); // Clear error on input change
+                      setDepositError(null);
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-black"
                     placeholder="Enter amount"
@@ -574,6 +677,67 @@ const Dashboard = () => {
                     className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
                   >
                     Deposit
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Withdraw Modal */}
+        <AnimatePresence>
+          {isWithdrawModalOpen && (
+            <motion.div
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div
+                className="bg-white rounded-lg p-6 w-full max-w-md"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  Withdraw Funds
+                </h2>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Amount (Tsh)
+                  </label>
+                  <input
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={(e) => {
+                      setWithdrawAmount(e.target.value);
+                      setWithdrawError(null);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                    placeholder="Enter amount"
+                  />
+                  {withdrawError && (
+                    <p className="text-red-600 text-sm mt-1">{withdrawError}</p>
+                  )}
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setIsWithdrawModalOpen(false);
+                      setWithdrawAmount("");
+                      setWithdrawError(null);
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleWithdraw}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  >
+                    Withdraw
                   </button>
                 </div>
               </motion.div>
@@ -897,9 +1061,9 @@ const Dashboard = () => {
                                           }),
                                         ),
                                       );
-                                    } catch (err: AxiosError<ApiErrorResponse>) {
+                                    } catch (err: unknown) {
                                       alert(
-                                        `Investment failed: ${err.response?.data?.error || "Unknown error"}`,
+                                        `Investment failed: ${(err as AxiosError<ApiErrorResponse>).response?.data?.error || "Unknown error"}`,
                                       );
                                     }
                                   } else {
