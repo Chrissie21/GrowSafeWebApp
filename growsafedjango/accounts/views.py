@@ -672,3 +672,32 @@ def admin_list_users(request):
             {"error": f"Failed to fetch users: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+        
+# Admin: Update user details
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def admin_update_user(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        data = request.data
+        user.first_name = data.get('first_name', user.first_name)
+        user.last_name = data.get('last_name', user.last_name)
+        user.email = data.get('email', user.email)
+        
+        # Validate email uniqueness
+        if 'email' in data and User.objects.filter(email=data['email']).exclude(id=user_id).exists():
+            return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.save()
+        return Response({
+            'message': 'User updated successfully',
+            'user_id': user.id
+        }, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        print(f"Error in admin_update_user: {str(e)}")
+        return Response(
+            {"error": f"Failed to update user: {str(e)}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
