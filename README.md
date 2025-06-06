@@ -1,2 +1,2 @@
 # GrowSafeWebApp
-Implementing WebApp with Flutter.
+Was Jus messing up w tech stacks.
